@@ -1,0 +1,599 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-slate-900 tracking-tight;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 rounded-3xl shadow-glass;
+  }
+
+  .dash-card {
+    @apply bg-white border border-slate-100 rounded-3xl shadow-card transition-shadow duration-300;
+  }
+
+  .dash-card:hover {
+    @apply shadow-card-hover;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 active:bg-primary-700;
+    @apply text-white font-semibold rounded-2xl px-5 py-2.5 text-sm;
+    @apply transition-all duration-200 shadow-sm;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2;
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 16px -4px rgba(91, 95, 245, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 active:bg-slate-300;
+    @apply text-slate-700 font-semibold rounded-2xl px-5 py-2.5 text-sm;
+    @apply transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-danger {
+    @apply bg-danger-500 hover:bg-danger-600;
+    @apply text-white font-semibold rounded-2xl px-5 py-2.5 text-sm;
+    @apply transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary-200 text-primary-600 bg-white;
+    @apply hover:bg-primary-50 hover:border-primary-300 font-semibold rounded-2xl px-5 py-2.5 text-sm;
+    @apply transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2;
+  }
+
+  /* Forms */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-2xl text-sm;
+    @apply bg-slate-50/70 border border-slate-200;
+    @apply text-slate-900 placeholder-slate-400;
+    @apply focus:outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-400 focus:bg-white;
+    @apply transition-all duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-slate-700 mb-1.5;
+  }
+
+  .form-error {
+    @apply text-danger-500 text-xs mt-1.5 font-medium;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-2xl;
+    @apply text-slate-500 text-sm font-medium;
+    @apply hover:bg-primary-50 hover:text-primary-600;
+    @apply transition-all duration-150;
+  }
+
+  .nav-link-active {
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-2xl;
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white;
+    @apply text-sm font-semibold shadow-glow-lg;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-success {
+    @apply bg-accent-500/10 text-accent-600;
+  }
+  .badge-danger {
+    @apply bg-danger-500/10 text-danger-600;
+  }
+  .badge-warning {
+    @apply bg-warning-500/10 text-warning-600;
+  }
+  .badge-info {
+    @apply bg-blue-500/10 text-blue-600;
+  }
+  .badge-purple {
+    @apply bg-purple-500/10 text-purple-600;
+  }
+
+  /* Page structure */
+  .page-container {
+    @apply max-w-7xl mx-auto;
+  }
+  .section-title {
+    @apply text-xl font-bold text-slate-900 mb-1 tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-sm text-slate-500;
+  }
+
+  /* Tables */
+  .table-container {
+    @apply dash-card overflow-hidden;
+  }
+  .table-header {
+    @apply bg-slate-50/70 border-b border-slate-100;
+  }
+  .table-th {
+    @apply px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+  }
+  .table-td {
+    @apply px-6 py-4 text-sm text-slate-700;
+  }
+  .table-row {
+    @apply border-b border-slate-50 hover:bg-slate-50/60 transition-colors duration-150;
+  }
+
+  /* Auth pages */
+  .auth-container {
+    @apply min-h-screen flex items-center justify-center p-4;
+    background:
+      radial-gradient(
+        circle at 20% 20%,
+        rgba(91, 95, 245, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 80%,
+        rgba(15, 184, 148, 0.06),
+        transparent 40%
+      ),
+      #fafbff;
+  }
+
+  .auth-card {
+    @apply bg-white rounded-4xl p-8 w-full max-w-md;
+    box-shadow:
+      0 4px 6px rgba(15, 23, 42, 0.03),
+      0 24px 48px -12px rgba(91, 95, 245, 0.18);
+  }
+}
+/* ── Dark mode overrides ─────────────────────────────────── */
+.dark body {
+  background-color: #0f0f1a;
+  color: #e2e8f0;
+}
+
+.dark .dash-card {
+  background-color: #1a1a2e;
+  border-color: #2a2a42;
+}
+
+.dark .glass-card {
+  background-color: rgba(26, 26, 46, 0.7);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .form-input {
+  background-color: #14141f;
+  border-color: #2a2a42;
+  color: #e2e8f0;
+}
+
+.dark .form-input::placeholder {
+  color: #545470;
+}
+
+.dark .form-label {
+  color: #cbd5e1;
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f1f5f9;
+}
+
+.dark .btn-secondary {
+  background-color: #24243a;
+  color: #e2e8f0;
+}
+.dark .btn-secondary:hover {
+  background-color: #2e2e4a;
+}
+
+.dark .btn-outline {
+  background-color: transparent;
+  border-color: #3730a3;
+  color: #a5b4fc;
+}
+.dark .btn-outline:hover {
+  background-color: rgba(91, 95, 245, 0.1);
+}
+
+.dark .nav-link {
+  color: #94a3b8;
+}
+.dark .nav-link:hover {
+  background-color: rgba(91, 95, 245, 0.15);
+  color: #a5b4fc;
+}
+
+.dark .table-header {
+  background-color: #14141f;
+  border-color: #2a2a42;
+}
+.dark .table-row {
+  border-color: #1e1e30;
+}
+.dark .table-row:hover {
+  background-color: #1e1e30;
+}
+.dark .table-th {
+  color: #64748b;
+}
+.dark .table-td {
+  color: #cbd5e1;
+}
+
+.dark .auth-container {
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(91, 95, 245, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(15, 184, 148, 0.1),
+      transparent 40%
+    ),
+    #0f0f1a;
+}
+
+.dark .auth-card {
+  background-color: #1a1a2e;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #2a2a42;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #3a3a5a;
+}
+/* ── Dark mode text color remapping (global, automatic) ───── */
+.dark .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+.dark .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+.dark .text-slate-600 {
+  color: #a8b3c5 !important;
+}
+.dark .text-slate-500 {
+  color: #8b96ab !important;
+}
+.dark .text-slate-400 {
+  color: #6b7690 !important;
+}
+.dark .text-slate-300 {
+  color: #4b5570 !important;
+}
+
+.dark .border-slate-100 {
+  border-color: #24243a !important;
+}
+.dark .border-slate-200 {
+  border-color: #2a2a42 !important;
+}
+.dark .border-slate-50 {
+  border-color: #1e1e30 !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #14141f !important;
+}
+.dark .bg-slate-100 {
+  background-color: #1e1e30 !important;
+}
+.dark .bg-white {
+  background-color: #1a1a2e !important;
+}
+
+/* Soft icon-chip backgrounds need a dark-friendly version too */
+.dark .bg-primary-50 {
+  background-color: rgba(91, 95, 245, 0.15) !important;
+}
+.dark .bg-accent-500\/10,
+.dark .bg-green-50 {
+  background-color: rgba(15, 184, 148, 0.15) !important;
+}
+.dark .bg-danger-500\/10,
+.dark .bg-red-50 {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+.dark .bg-orange-50 {
+  background-color: rgba(249, 115, 22, 0.15) !important;
+}
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.15) !important;
+}
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+.dark .bg-primary-500\/10 {
+  background-color: rgba(91, 95, 245, 0.15) !important;
+}
+.dark .bg-primary-50\/50 {
+  background-color: rgba(91, 95, 245, 0.12) !important;
+}
+
+/* Badges keep readable tint + text in dark mode */
+.dark .badge-success {
+  background-color: rgba(15, 184, 148, 0.18) !important;
+  color: #4ade80 !important;
+}
+.dark .badge-danger {
+  background-color: rgba(244, 63, 94, 0.18) !important;
+  color: #fb7185 !important;
+}
+.dark .badge-warning {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+}
+.dark .badge-info {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+  color: #93c5fd !important;
+}
+.dark .badge-purple {
+  background-color: rgba(168, 85, 247, 0.18) !important;
+  color: #d8b4fe !important;
+}
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300;
+}
+/* =====================================================
+   React DatePicker - Slotly Theme (Light & Dark)
+===================================================== */
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+}
+
+/* Calendar Container */
+.slotly-calendar {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+}
+
+/* Header */
+.slotly-calendar .react-datepicker__header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.slotly-calendar .react-datepicker__current-month {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.slotly-calendar .react-datepicker__day-name {
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Days */
+.slotly-calendar .react-datepicker__day {
+  color: #0f172a;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.slotly-calendar .react-datepicker__day:hover {
+  background: #5b5ff5;
+  color: white;
+}
+
+.slotly-calendar .react-datepicker__day--selected,
+.slotly-calendar .react-datepicker__day--keyboard-selected {
+  background: #5b5ff5;
+  color: white;
+}
+
+.slotly-calendar .react-datepicker__day--today {
+  border: 2px solid #10b981;
+}
+
+.slotly-calendar .react-datepicker__day--disabled {
+  color: #cbd5e1;
+}
+
+.slotly-calendar .react-datepicker__navigation-icon::before {
+  border-color: #475569;
+}
+
+.react-datepicker__triangle {
+  display: none;
+}
+
+/* =====================================================
+   Dark Mode
+===================================================== */
+
+.dark .slotly-calendar {
+  background: #1a1a2e;
+  border: 1px solid #2a2a42;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.dark .slotly-calendar .react-datepicker__header {
+  background: #14141f;
+  border-bottom: 1px solid #2a2a42;
+}
+
+.dark .slotly-calendar .react-datepicker__current-month {
+  color: #f8fafc;
+}
+
+.dark .slotly-calendar .react-datepicker__day-name {
+  color: #94a3b8;
+}
+
+.dark .slotly-calendar .react-datepicker__day {
+  color: #e2e8f0;
+}
+
+.dark .slotly-calendar .react-datepicker__day:hover {
+  background: #5b5ff5;
+  color: white;
+}
+
+.dark .slotly-calendar .react-datepicker__day--selected,
+.dark .slotly-calendar .react-datepicker__day--keyboard-selected {
+  background: #5b5ff5;
+  color: white;
+}
+
+.dark .slotly-calendar .react-datepicker__day--today {
+  border: 2px solid #10b981;
+}
+
+.dark .slotly-calendar .react-datepicker__day--disabled {
+  color: #475569;
+}
+
+.dark .slotly-calendar .react-datepicker__navigation-icon::before {
+  border-color: #ffffff;
+}
+
+/* Month Dropdown */
+.dark .react-datepicker__month-dropdown,
+.dark .react-datepicker__year-dropdown {
+  background: #1a1a2e;
+  border: 1px solid #2a2a42;
+}
+
+.dark .react-datepicker__month-option,
+.dark .react-datepicker__year-option {
+  color: white;
+}
+
+.dark .react-datepicker__month-option:hover,
+.dark .react-datepicker__year-option:hover {
+  background: #5b5ff5;
+}
+
+/* Popper */
+.react-datepicker-popper {
+  z-index: 9999;
+}
+/* ── Dark mode: fix hover/interactive states (Tailwind hover: variants) ─── */
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1e1e30 !important;
+}
+.dark .hover\:bg-slate-100:hover {
+  background-color: #24243a !important;
+}
+.dark .hover\:bg-slate-200:hover {
+  background-color: #2e2e4a !important;
+}
+.dark .hover\:bg-primary-50:hover {
+  background-color: rgba(91, 95, 245, 0.15) !important;
+}
+.dark .hover\:bg-primary-500:hover,
+.dark .hover\:bg-primary-600:hover {
+  background-color: #4740e8 !important;
+}
+.dark .hover\:bg-amber-50:hover {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+.dark .hover\:bg-red-50:hover {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+.dark .hover\:bg-red-100:hover {
+  background-color: rgba(244, 63, 94, 0.22) !important;
+}
+.dark .hover\:bg-red-600:hover,
+.dark .hover\:bg-danger-600:hover {
+  background-color: #e11d48 !important;
+}
+.dark .hover\:bg-green-100:hover {
+  background-color: rgba(15, 184, 148, 0.2) !important;
+}
+
+.dark .hover\:text-slate-600:hover {
+  color: #cbd5e1 !important;
+}
+.dark .hover\:text-slate-800:hover {
+  color: #f1f5f9 !important;
+}
+.dark .hover\:text-primary-500:hover,
+.dark .hover\:text-primary-600:hover,
+.dark .hover\:text-primary-700:hover {
+  color: #a5b4fc !important;
+}
+.dark .hover\:text-red-500:hover {
+  color: #fb7185 !important;
+}
+.dark .hover\:text-amber-500:hover,
+.dark .hover\:text-amber-600:hover {
+  color: #fbbf24 !important;
+}
+
+.dark .hover\:border-primary-200:hover,
+.dark .hover\:border-primary-300:hover {
+  border-color: #4740e8 !important;
+}
