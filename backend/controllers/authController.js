@@ -27,6 +27,27 @@ export const register = async (req, res) => {
       role: 'customer',
     });
 
+    // Generate and send verification email (non-blocking — registration
+    // still succeeds even if the email fails to send)
+    const verificationToken = user.generateVerificationToken();
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your Slotly account',
+        html: getVerificationEmailHTML(
+          user.name,
+          verificationToken,
+          process.env.CLIENT_URL
+        ),
+      });
+    } catch (emailError) {
+      console.error('Verification email failed to send:', emailError.message);
+    }
+
+    const token = generateToken(res, user._id, user.role);
+
     // Generate token — skip email verification for now
     const token = generateToken(res, user._id, user.role);
 
@@ -255,6 +276,55 @@ export const verifyEmail = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Email verified successfully!',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── Resend Verification Email ────────────────────────────────
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: 'If that email exists, a verification link has been sent.',
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account is already verified.',
+      });
+    }
+
+    const verificationToken = user.generateVerificationToken();
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your Slotly account',
+        html: getVerificationEmailHTML(
+          user.name,
+          verificationToken,
+          process.env.CLIENT_URL
+        ),
+      });
+    } catch (emailError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent. Try again later.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification email sent!',
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
