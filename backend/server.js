@@ -73,5 +73,9 @@ app.listen(PORT, () => {
   console.log(
     `\n🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`,
   );
-  console.log(`📡 API: http://localhost:${PORT}/api/health\n`);
+  const baseUrl =
+    process.env.NODE_ENV === "production"
+      ? process.env.CLIENT_URL?.replace(/\/$/, "") || `port ${PORT}`
+      : `http://localhost:${PORT}`;
+  console.log(`📡 API: ${baseUrl}/api/health\n`);
 });
