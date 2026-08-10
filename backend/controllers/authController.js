@@ -48,9 +48,6 @@ export const register = async (req, res) => {
 
     const token = generateToken(res, user._id, user.role);
 
-    // Generate token — skip email verification for now
-    const token = generateToken(res, user._id, user.role);
-
     return res.status(201).json({
       success: true,
       message: 'Account created successfully!',
