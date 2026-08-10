@@ -9,6 +9,7 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerification,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
@@ -21,6 +22,7 @@ router.post('/login',                       authLimiter, login);
 router.post('/forgot-password',             authLimiter, forgotPassword);
 router.put('/reset-password/:token',                     resetPassword);
 router.get('/verify-email/:token',                       verifyEmail);
+router.post('/resend-verification',         authLimiter, resendVerification);
 
 // Protected routes (login required)
 router.post('/logout',   protect, logout);
