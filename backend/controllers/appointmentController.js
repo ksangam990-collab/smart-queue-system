@@ -201,13 +201,7 @@ export const bookAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    console.log("\n==================================");
-    console.log("BOOK APPOINTMENT ERROR");
-    console.log("==================================");
-    console.error(error);
-    console.error(error.stack);
-    console.log("==================================\n");
-
+    console.error("Book appointment error:", error.message);
     return res.status(500).json({
       success: false,
       message: error.message,
