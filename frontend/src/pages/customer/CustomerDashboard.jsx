@@ -1,6 +1,5 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 
-import VerifyEmailBanner from '../../components/common/VerifyEmailBanner';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Zap, Star, Plus, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,8 +26,6 @@ const CustomerDashboard = () => {
 
   return (
     <div className="space-y-6">
-
-      <VerifyEmailBanner />
 
       {/* Header */}
       <motion.div
