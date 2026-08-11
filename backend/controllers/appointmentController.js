@@ -96,6 +96,7 @@ export const bookAppointment = async (req, res) => {
     }
 
     const { departmentId, serviceId, date, timeSlot, notes } = req.body;
+    const userId = req.user._id;
 
     // Validate service exists and belongs to department
     const service = await Service.findOne({
