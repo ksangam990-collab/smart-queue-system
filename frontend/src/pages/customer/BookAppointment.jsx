@@ -109,7 +109,11 @@ const BookAppointment = () => {
       setStep(4); // Success screen
       toast.success("Appointment booked successfully!");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Booking failed");
+      if (error.response?.data?.code === "EMAIL_NOT_VERIFIED") {
+        toast.error("Please verify your email first — check your inbox or resend from your dashboard.");
+      } else {
+        toast.error(error.response?.data?.message || "Booking failed");
+      }
     } finally {
       setBooking(false);
     }
