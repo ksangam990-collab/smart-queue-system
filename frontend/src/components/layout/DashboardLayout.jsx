@@ -3,8 +3,9 @@ import { Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import VerifyEmailBanner from '../common/VerifyEmailBanner';
 
-const DashboardLayout = ({ title }) => {
+  const DashboardLayout = ({ title }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -42,6 +43,9 @@ const DashboardLayout = ({ title }) => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar title={title} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
+          <VerifyEmailBanner />
+          <Outlet />
+        </main>
           <Outlet />
         </main>
       </div>
