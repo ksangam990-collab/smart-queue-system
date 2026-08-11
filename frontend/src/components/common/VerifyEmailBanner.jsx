@@ -11,7 +11,7 @@ const VerifyEmailBanner = () => {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  if (!user || user.isVerified) return null;
+  if (!user || user.role !== "customer" || user.isVerified) return null;
 
   const handleResend = async () => {
     setSending(true);
