@@ -87,8 +87,15 @@ export const getAvailableSlots = async (req, res) => {
 // ─── Book appointment ─────────────────────────────────────────
 export const bookAppointment = async (req, res) => {
   try {
+    if (!req.user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before booking an appointment.',
+        code: 'EMAIL_NOT_VERIFIED',
+      });
+    }
+
     const { departmentId, serviceId, date, timeSlot, notes } = req.body;
-    const userId = req.user._id;
 
     // Validate service exists and belongs to department
     const service = await Service.findOne({
