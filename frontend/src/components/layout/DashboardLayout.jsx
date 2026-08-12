@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import VerifyEmailBanner from '../common/VerifyEmailBanner';
 
-  const DashboardLayout = ({ title }) => {
+const DashboardLayout = ({ title }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
