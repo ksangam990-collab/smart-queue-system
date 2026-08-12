@@ -46,8 +46,6 @@ import VerifyEmailBanner from '../common/VerifyEmailBanner';
           <VerifyEmailBanner />
           <Outlet />
         </main>
-          <Outlet />
-        </main>
       </div>
     </div>
   );
