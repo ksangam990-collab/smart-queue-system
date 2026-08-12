@@ -313,6 +313,7 @@ export const resendVerification = async (req, res) => {
         ),
       });
     } catch (emailError) {
+      console.error('Resend verification email failed:', emailError.message);
       return res.status(500).json({
         success: false,
         message: 'Email could not be sent. Try again later.',
