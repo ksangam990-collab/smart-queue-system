@@ -396,9 +396,11 @@ const BookAppointment = () => {
               <DatePicker
                 selected={selected.date ? new Date(selected.date) : null}
                 onChange={(date) =>
-                  setSelected({
-                    ...selected,
-                    date: date ? date.toISOString().split("T")[0] : "",
+                  setSelected((prev) => ({
+                    ...prev,
+                    date: date
+                      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+                      : "",
                     slot: null,
                   })
                 }
