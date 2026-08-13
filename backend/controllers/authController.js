@@ -2,7 +2,13 @@
 
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
-import { sendEmail, getVerificationEmailHTML, getPasswordResetEmailHTML } from '../utils/sendEmail.js';
+import {
+  sendEmail,
+  getVerificationEmailHTML,
+  getVerificationEmailText,
+  getPasswordResetEmailHTML,
+  getPasswordResetEmailText,
+} from '../utils/sendEmail.js';
 
 // ─── Register ─────────────────────────────────────────────────
 export const register = async (req, res) => {
@@ -35,8 +41,13 @@ export const register = async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Verify your Slotly account',
+        subject: 'Please confirm your email address',
         html: getVerificationEmailHTML(
+          user.name,
+          verificationToken,
+          process.env.CLIENT_URL
+        ),
+        text: getVerificationEmailText(
           user.name,
           verificationToken,
           process.env.CLIENT_URL
@@ -186,8 +197,13 @@ export const forgotPassword = async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Slotly Password Reset',
+        subject: 'Reset your password',
         html: getPasswordResetEmailHTML(
+          user.name,
+          resetToken,
+          process.env.CLIENT_URL
+        ),
+        text: getPasswordResetEmailText(
           user.name,
           resetToken,
           process.env.CLIENT_URL
@@ -305,8 +321,13 @@ export const resendVerification = async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Verify your Slotly account',
+        subject: 'Please confirm your email address',
         html: getVerificationEmailHTML(
+          user.name,
+          verificationToken,
+          process.env.CLIENT_URL
+        ),
+        text: getVerificationEmailText(
           user.name,
           verificationToken,
           process.env.CLIENT_URL
