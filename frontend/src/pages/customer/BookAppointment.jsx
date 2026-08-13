@@ -401,8 +401,7 @@ const BookAppointment = () => {
                     date: date
                       ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
                       : "",
-                    slot: null,
-                  })
+                  }))
                 }
                 minDate={new Date()}
                 dateFormat="dd/MM/yyyy"
