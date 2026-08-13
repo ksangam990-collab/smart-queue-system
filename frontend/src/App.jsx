@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { useTheme } from "./contexts/ThemeContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleRoute from "./routes/RoleRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -39,21 +40,31 @@ import LiveQueue from "./pages/customer/LiveQueue";
 import FeedbackPage from "./pages/customer/Feedback";
 import Notifications from "./pages/customer/Notifications";
 
+const ThemedToaster = () => {
+  const { isDark } = useTheme();
+  return (
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        duration: 3500,
+        style: {
+          borderRadius: "12px",
+          fontFamily: "Inter, sans-serif",
+          fontSize: "14px",
+          background: isDark ? "#1a1a2e" : "#ffffff",
+          color: isDark ? "#e2e8f0" : "#1e293b",
+          border: isDark ? "1px solid #2a2a42" : "1px solid #f1f5f9",
+        },
+      }}
+    />
+  );
+};
+
 const App = () => (
   <BrowserRouter>
     <ThemeProvider>
       <AuthProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3500,
-            style: {
-              borderRadius: "12px",
-              fontFamily: "Inter, sans-serif",
-              fontSize: "14px",
-            },
-          }}
-        />
+        <ThemedToaster />
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
