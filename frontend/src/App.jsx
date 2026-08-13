@@ -48,12 +48,29 @@ const ThemedToaster = () => {
       toastOptions={{
         duration: 3500,
         style: {
-          borderRadius: "12px",
+          borderRadius: "16px",
           fontFamily: "Inter, sans-serif",
           fontSize: "14px",
+          fontWeight: 500,
+          padding: "14px 18px",
           background: isDark ? "#1a1a2e" : "#ffffff",
           color: isDark ? "#e2e8f0" : "#1e293b",
-          border: isDark ? "1px solid #2a2a42" : "1px solid #f1f5f9",
+          border: isDark ? "1px solid #2a2a42" : "1px solid #e2e8f0",
+          boxShadow: isDark
+            ? "0 8px 30px rgba(0, 0, 0, 0.4)"
+            : "0 8px 30px rgba(0, 0, 0, 0.08)",
+        },
+        success: {
+          iconTheme: {
+            primary: "#10b981",
+            secondary: isDark ? "#1a1a2e" : "#ffffff",
+          },
+        },
+        error: {
+          iconTheme: {
+            primary: "#ef4444",
+            secondary: isDark ? "#1a1a2e" : "#ffffff",
+          },
         },
       }}
     />
