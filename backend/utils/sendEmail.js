@@ -1,6 +1,5 @@
 // backend/utils/sendEmail.js
-
-export const sendEmail = async ({ to, subject, html }) => {
+export const sendEmail = async ({ to, subject, html, text }) => {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -12,9 +11,9 @@ export const sendEmail = async ({ to, subject, html }) => {
       to,
       subject,
       html,
+      text,
     }),
   });
-
   if (!response.ok) {
     const errorBody = await response.text();
     throw new Error(`Resend API error (${response.status}): ${errorBody}`);
@@ -27,19 +26,29 @@ export const getVerificationEmailHTML = (name, token, baseUrl) => `
     <div style="background: #6366f1; border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;">
       <h1 style="color: white; margin: 0; font-size: 28px;">⚡ Slotly</h1>
     </div>
-    <h2 style="color: #1e293b;">Hi ${name}, verify your email</h2>
+    <h2 style="color: #1e293b;">Hi ${name}, please confirm your email address</h2>
     <p style="color: #64748b; line-height: 1.6;">
-      Click the button below to verify your email address and activate your account.
+      Click the button below to confirm your email address and activate your account.
     </p>
     <div style="text-align: center; margin: 30px 0;">
       <a href="${baseUrl}/verify-email/${token}"
          style="background: #6366f1; color: white; padding: 14px 32px; border-radius: 12px;
                 text-decoration: none; font-weight: 600; display: inline-block;">
-        Verify Email
+        Confirm email address
       </a>
     </div>
-    <p style="color: #94a3b8; font-size: 14px;">This link expires in 24 hours.</p>
+    <p style="color: #94a3b8; font-size: 14px;">This link expires in 24 hours. If you didn't create a Slotly account, you can ignore this email.</p>
   </div>
+`;
+
+export const getVerificationEmailText = (name, token, baseUrl) => `
+Hi ${name},
+
+Please confirm your email address to activate your Slotly account.
+
+Confirm your email here: ${baseUrl}/verify-email/${token}
+
+This link expires in 24 hours. If you didn't create a Slotly account, you can ignore this email.
 `;
 
 export const getPasswordResetEmailHTML = (name, token, baseUrl) => `
@@ -60,4 +69,14 @@ export const getPasswordResetEmailHTML = (name, token, baseUrl) => `
     </div>
     <p style="color: #94a3b8; font-size: 14px;">This link expires in 30 minutes. If you didn't request this, ignore this email.</p>
   </div>
+`;
+
+export const getPasswordResetEmailText = (name, token, baseUrl) => `
+Hi ${name},
+
+We received a request to reset your password.
+
+Reset your password here: ${baseUrl}/reset-password/${token}
+
+This link expires in 30 minutes. If you didn't request this, you can ignore this email.
 `;
