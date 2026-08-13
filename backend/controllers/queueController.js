@@ -4,11 +4,18 @@ import Queue       from '../models/Queue.js';
 import Appointment from '../models/Appointment.js';
 import Notification from '../models/Notification.js';
 
+// India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
+// computed relative to IST, not the server's own clock, or day boundaries
+// shift incorrectly for anyone using the app late at night / early morning.
+const getISTDateString = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
 // ─── Get queue for a department today ────────────────────────
 export const getQueue = async (req, res) => {
   try {
     const { departmentId, date } = req.query;
-    const queryDate = date ? new Date(date) : new Date();
+    const queryDate = date ? new Date(date) : new Date(getISTDateString());
 
     const queue = await Queue.findOne({
       department: departmentId,
@@ -41,7 +48,7 @@ export const getQueue = async (req, res) => {
 // ─── Get all queues today (admin) ─────────────────────────────
 export const getAllQueues = async (req, res) => {
   try {
-    const today = new Date();
+    const today = new Date(getISTDateString());
     const queues = await Queue.find({
       date: {
         $gte: new Date(today).setHours(0, 0, 0, 0),
@@ -129,7 +136,7 @@ export const callNext = async (req, res) => {
 export const getQueuePosition = async (req, res) => {
   try {
     const { token, departmentId } = req.query;
-    const today = new Date();
+    const today = new Date(getISTDateString());
 
     const queue = await Queue.findOne({
       department: departmentId,
@@ -222,7 +229,7 @@ export const addToQueue = async (req, res) => {
       });
     }
 
-    const today = new Date();
+    const today = new Date(getISTDateString());
     let queue = await Queue.findOne({
       department: appointment.department._id,
       date: {
