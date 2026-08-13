@@ -1,27 +1,24 @@
 // backend/utils/sendEmail.js
 
-import nodemailer from 'nodemailer';
-
 export const sendEmail = async ({ to, subject, html }) => {
-  const transporter = nodemailer.createTransport({
-       host: process.env.EMAIL_HOST,
-       port: process.env.EMAIL_PORT,
-       secure: true,
-       family: 4,
-       auth: {
-         user: process.env.EMAIL_USER,
-         pass: process.env.EMAIL_PASS,
-       },
-     });
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: `Slotly <${process.env.EMAIL_FROM}>`,
+      to,
+      subject,
+      html,
+    }),
+  });
 
-  const mailOptions = {
-    from: `Slotly <${process.env.EMAIL_FROM}>`,
-    to,
-    subject,
-    html,
-  };
-
-  await transporter.sendMail(mailOptions);
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Resend API error (${response.status}): ${errorBody}`);
+  }
 };
 
 // Email templates
