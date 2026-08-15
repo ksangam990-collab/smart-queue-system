@@ -10,6 +10,13 @@ import {
   generateTimeSlots,
 } from "../utils/generateQueueToken.js";
 
+// India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
+// computed relative to IST, not the server's own clock, or day boundaries
+// shift incorrectly late at night / early morning.
+const getISTDateString = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
 // ─── Get available time slots ─────────────────────────────────
 export const getAvailableSlots = async (req, res) => {
   try {
@@ -415,7 +422,7 @@ export const cancelAppointment = async (req, res) => {
 // ─── Get today's appointments (staff) ────────────────────────
 export const getTodayAppointments = async (req, res) => {
   try {
-    const today = new Date();
+    const today = new Date(getISTDateString());
     const filter = {
       date: {
         $gte: new Date(today).setHours(0, 0, 0, 0),
@@ -446,7 +453,7 @@ export const getTodayAppointments = async (req, res) => {
 // ─── Dashboard analytics ──────────────────────────────────────
 export const getAnalytics = async (req, res) => {
   try {
-    const today = new Date();
+    const today = new Date(getISTDateString());
     const startOfDay = new Date(today).setHours(0, 0, 0, 0);
     const endOfDay = new Date(today).setHours(23, 59, 59, 999);
 
