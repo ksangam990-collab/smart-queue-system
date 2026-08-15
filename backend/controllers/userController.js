@@ -4,6 +4,9 @@ import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
+const getISTDateString = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
 
 // ─── Get all users ────────────────────────────────────────────
 export const getUsers = async (req, res) => {
@@ -242,7 +245,7 @@ export const changePassword = async (req, res) => {
 // ─── Get dashboard stats (admin) ──────────────────────────────
 export const getDashboardStats = async (req, res) => {
   try {
-    const today = new Date();
+    const today = new Date(getISTDateString());
     const startOfDay = new Date(today).setHours(0, 0, 0, 0);
     const endOfDay = new Date(today).setHours(23, 59, 59, 999);
 
@@ -281,7 +284,7 @@ export const getDashboardStats = async (req, res) => {
     // Weekly data for charts
     const weeklyData = await Promise.all(
       Array.from({ length: 7 }, async (_, i) => {
-        const d = new Date();
+        const d = new Date(getISTDateString());
         d.setDate(d.getDate() - (6 - i));
         const start = new Date(d).setHours(0, 0, 0, 0);
         const end = new Date(d).setHours(23, 59, 59, 999);
