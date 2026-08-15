@@ -4,6 +4,10 @@ import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
+
+// India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
+// computed relative to IST, not the server's own clock, or day boundaries
+// shift incorrectly late at night / early morning.
 const getISTDateString = () => {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 };
