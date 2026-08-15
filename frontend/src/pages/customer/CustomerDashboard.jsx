@@ -1,17 +1,13 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Zap, Star, Plus, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/common/StatsCard';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../hooks/useAuth';
-
-const recentBookings = [
-  { id: 1, service: 'General Checkup', dept: 'Cardiology',  date: 'Jul 3, 2026', time: '10:00 AM', token: 'A-012', status: 'completed' },
-  { id: 2, service: 'Eye Test',        dept: 'Ophthalmology',date: 'Jul 5, 2026', time: '02:30 PM', token: 'C-007', status: 'confirmed' },
-  { id: 3, service: 'Blood Test',      dept: 'Pathology',   date: 'Jul 8, 2026', time: '09:00 AM', token: 'D-003', status: 'pending'   },
-];
+import api from '../../services/api';
 
 const statusVariant = {
   completed: 'success',
@@ -23,6 +19,52 @@ const statusVariant = {
 const CustomerDashboard = () => {
   const { user }  = useAuth();
   const navigate  = useNavigate();
+
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [liveQueue, setLiveQueue] = useState(null); // { token, position, currentToken, estimatedWait }
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const { data } = await api.get('/appointments/my?limit=50');
+        const list = data.data || [];
+        setAppointments(list);
+
+        // Find the most relevant active appointment (confirmed/pending) to
+        // show live queue info for — prefer the soonest upcoming one.
+        const active = list
+          .filter((a) => ['confirmed', 'pending'].includes(a.status))
+          .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+        if (active) {
+          try {
+            const posRes = await api.get(
+              `/queue/position?token=${active.queueToken}&departmentId=${active.department?._id}`
+            );
+            setLiveQueue({ ...posRes.data.data, token: active.queueToken });
+          } catch {
+            setLiveQueue(null);
+          }
+        }
+      } catch {
+        setAppointments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const totalBookings = appointments.length;
+  const completedCount = appointments.filter((a) => a.status === 'completed').length;
+  const upcomingCount = appointments.filter((a) =>
+    ['confirmed', 'pending'].includes(a.status)
+  ).length;
+
+  const recentBookings = [...appointments]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -51,10 +93,16 @@ const CustomerDashboard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Bookings"   value="12"  icon={Calendar} color="primary" delay={0.0} />
-        <StatsCard title="Completed"        value="8"   icon={Star}     color="green"   delay={0.1} />
-        <StatsCard title="Upcoming"         value="3"   icon={Clock}    color="blue"    delay={0.2} />
-        <StatsCard title="Queue Position"   value="#4"  icon={Zap}      color="orange"  delay={0.3} />
+        <StatsCard title="Total Bookings"   value={loading ? '—' : totalBookings}   icon={Calendar} color="primary" delay={0.0} />
+        <StatsCard title="Completed"        value={loading ? '—' : completedCount}  icon={Star}     color="green"   delay={0.1} />
+        <StatsCard title="Upcoming"         value={loading ? '—' : upcomingCount}   icon={Clock}    color="blue"    delay={0.2} />
+        <StatsCard
+          title="Queue Position"
+          value={loading ? '—' : liveQueue?.position ? `#${liveQueue.position}` : '—'}
+          icon={Zap}
+          color="orange"
+          delay={0.3}
+        />
       </div>
 
       {/* Live queue + upcoming */}
@@ -75,18 +123,28 @@ const CustomerDashboard = () => {
             </span>
           </div>
 
-          <div className="text-center py-4">
-            <p className="text-sm text-slate-500 mb-1">Currently Serving</p>
-            <p className="text-3xl font-bold text-primary-500 mb-4">A-008</p>
-            <div className="bg-primary-50 rounded-2xl p-4 mb-4">
-              <p className="text-sm text-slate-500 mb-1">Your Token</p>
-              <p className="text-2xl font-bold text-slate-800">A-012</p>
-              <p className="text-xs text-slate-500 mt-1">4 people ahead</p>
+          {liveQueue ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-slate-500 mb-1">Currently Serving</p>
+              <p className="text-3xl font-bold text-primary-500 mb-4">
+                {liveQueue.currentToken || '—'}
+              </p>
+              <div className="bg-primary-50 rounded-2xl p-4 mb-4">
+                <p className="text-sm text-slate-500 mb-1">Your Token</p>
+                <p className="text-2xl font-bold text-slate-800">{liveQueue.token}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {Math.max((liveQueue.position || 1) - 1, 0)} people ahead
+                </p>
+              </div>
+              <p className="text-sm text-slate-500">
+                Est. wait: <span className="font-semibold text-slate-700">~{liveQueue.estimatedWait || 0} mins</span>
+              </p>
             </div>
-            <p className="text-sm text-slate-500">
-              Est. wait: <span className="font-semibold text-slate-700">~20 mins</span>
-            </p>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-sm text-slate-500">No active queue right now.</p>
+            </div>
+          )}
 
           <button
             onClick={() => navigate('/live-queue')}
@@ -113,27 +171,39 @@ const CustomerDashboard = () => {
             </button>
           </div>
           <div className="divide-y divide-slate-50">
-            {recentBookings.map((booking) => (
-              <div key={booking.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
-                    <Calendar size={18} className="text-primary-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-800 text-sm">{booking.service}</p>
-                    <p className="text-xs text-slate-500">{booking.dept} · {booking.date} · {booking.time}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-xs font-semibold text-primary-600 bg-primary-50 px-2 py-1 rounded-lg">
-                    {booking.token}
-                  </span>
-                  <Badge variant={statusVariant[booking.status]}>
-                    {booking.status}
-                  </Badge>
-                </div>
+            {recentBookings.length === 0 ? (
+              <div className="px-6 py-10 text-center text-sm text-slate-500">
+                {loading ? 'Loading...' : "You haven't booked any appointments yet."}
               </div>
-            ))}
+            ) : (
+              recentBookings.map((booking) => (
+                <div key={booking._id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                      <Calendar size={18} className="text-primary-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800 text-sm">{booking.service?.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {booking.department?.name} ·{' '}
+                        {new Date(booking.date).toLocaleDateString('en-IN', {
+                          month: 'short', day: 'numeric', year: 'numeric',
+                        })}{' '}
+                        · {booking.timeSlot?.start}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-semibold text-primary-600 bg-primary-50 px-2 py-1 rounded-lg">
+                      {booking.queueToken}
+                    </span>
+                    <Badge variant={statusVariant[booking.status] || 'default'}>
+                      {booking.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </motion.div>
       </div>
