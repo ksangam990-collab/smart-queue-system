@@ -1,33 +1,50 @@
 // frontend/src/pages/Home.jsx
 
-import Logo from "../components/common/Logo";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Calendar,
-  Clock,
-  Users,
+  Radar,
+  Bell,
+  DoorOpen,
   BarChart3,
   ShieldCheck,
   Smartphone,
+  Users,
   ArrowRight,
   CheckCircle2,
-  Sun,
-  Moon,
 } from "lucide-react";
-import { useTheme } from "../hooks/useTheme";
+import Logo from "../components/common/Logo";
+import LiveBoard from "../components/home/LiveBoard";
 
-const features = [
+const flow = [
   {
     icon: Calendar,
-    title: "Effortless booking",
-    desc: "Reserve a slot in under a minute with a guided, four-step flow — no phone calls, no front-desk queues.",
+    step: "01",
+    title: "Book a slot",
+    desc: "Pick a department, a service, and a time — done in under a minute, no phone call required.",
   },
   {
-    icon: Clock,
-    title: "Live queue tracking",
-    desc: "Watch your position update in real time and know exactly when to arrive, down to the minute.",
+    icon: Bell,
+    step: "02",
+    title: "Get your token",
+    desc: "A queue number is issued the instant you book. No front-desk visit, no paper ticket.",
   },
+  {
+    icon: Radar,
+    step: "03",
+    title: "Track it live",
+    desc: "Your position and estimated wait update in real time, right on your phone.",
+  },
+  {
+    icon: DoorOpen,
+    step: "04",
+    title: "Walk in on time",
+    desc: "Arrive exactly when you're about to be called — not thirty minutes early, not late.",
+  },
+];
+
+const capabilities = [
   {
     icon: Users,
     title: "Built for every role",
@@ -36,216 +53,231 @@ const features = [
   {
     icon: BarChart3,
     title: "Reporting that matters",
-    desc: "Track completions, no-shows, and demand trends with exportable, presentation-ready reports.",
+    desc: "Track completions, no-shows, and demand trends with exportable reports.",
   },
   {
     icon: ShieldCheck,
     title: "Secure by default",
-    desc: "JWT authentication, encrypted passwords, and role-based access control on every request.",
+    desc: "JWT auth, encrypted passwords, and role-based access on every request.",
   },
   {
     icon: Smartphone,
     title: "Works everywhere",
-    desc: "A responsive interface that feels native whether you're on a front-desk monitor or a phone.",
+    desc: "Feels native on a front-desk monitor and on a phone in someone's pocket.",
   },
 ];
 
 const Home = () => {
-  const { isDark, toggleTheme } = useTheme();
-
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0f0f1a] overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-[#07070d] text-white overflow-x-hidden selection:bg-primary-500/30">
+      {/* ── ambient atmosphere ───────────────────────────────── */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-primary-600/[0.18] rounded-full blur-[120px] animate-[pulseSoft_9s_ease-in-out_infinite]" />
+        <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-emerald-500/[0.10] rounded-full blur-[120px] animate-[pulseSoft_11s_ease-in-out_infinite]" />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+      </div>
+
       {/* ── Nav ──────────────────────────────────────────────── */}
-      <nav className="flex items-center justify-between px-6 sm:px-10 py-5 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2.5">
-          <Logo size={36} />
-          <div className="flex flex-col leading-none">
-            <span className="font-bold text-lg text-slate-900 dark:text-slate-50 tracking-tight">
-              Slotly
-            </span>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 tracking-wide uppercase">
-              Smart Queue Booking
-            </span>
+      <nav className="sticky top-0 z-30 backdrop-blur-xl bg-[#07070d]/70 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2.5">
+            <Logo size={34} />
+            <div className="flex flex-col leading-none">
+              <span className="font-bold text-lg tracking-tight">Slotly</span>
+              <span className="text-[10px] font-medium text-white/35 tracking-widest uppercase">
+                Smart Queue Booking
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <Link to="/login" className="btn-secondary text-sm">
-            Sign in
-          </Link>
-          <Link
-            to="/register"
-            className="btn-primary text-sm hidden sm:inline-flex"
-          >
-            Get started
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/login"
+              className="hidden sm:inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all"
+            >
+              Sign in
+            </Link>
+            <Link to="/register" className="btn-primary text-sm">
+              Get started
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative px-6 pt-16 pb-24 sm:pt-24 sm:pb-32">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary-500/[0.06] dark:bg-primary-500/[0.15] rounded-full blur-3xl -z-10" />
-        <div className="absolute top-40 right-[10%] w-[400px] h-[400px] bg-accent-500/[0.04] dark:bg-accent-500/[0.12] rounded-full blur-3xl -z-10" />
-
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 dark:bg-primary-500/20 border border-primary-100 dark:border-primary-400/30 text-primary-700 dark:text-primary-200 text-xs font-semibold mb-6 shadow-sm dark:shadow-none"
-          >
-            <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse-soft" />
-            Slotly is live for hospitals, clinics & service centers
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="text-4xl sm:text-6xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight leading-[1.08] mb-6"
-          >
-            Waiting rooms,
-            <br />
-            <span className="text-primary-500">reimagined.</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-10 max-w-xl mx-auto"
-          >
-            Book appointments, get an instant queue token, and track your exact
-            position — all from your phone. No more sitting around guessing.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
-          >
-            <Link
-              to="/register"
-              className="btn-primary px-7 py-3.5 text-[15px] w-full sm:w-auto group"
+      <section className="relative px-6 sm:px-10 pt-16 pb-24 sm:pt-20 sm:pb-32 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-16 lg:gap-10 items-center">
+          {/* left: copy */}
+          <div className="text-center lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-white/70 text-xs font-semibold mb-7"
             >
-              Book your first appointment
-              <ArrowRight
-                size={16}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </Link>
-            <Link
-              to="/login"
-              className="btn-secondary px-7 py-3.5 text-[15px] w-full sm:w-auto"
-            >
-              I already have an account
-            </Link>
-          </motion.div>
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+              Live for hospitals, clinics & service centers
+            </motion.div>
 
+            <motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="text-[2.75rem] leading-[1.05] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight mb-6"
+            >
+              Your queue,
+              <br />
+              <span className="bg-gradient-to-r from-primary-300 via-primary-400 to-emerald-300 bg-clip-text text-transparent">
+                live on screen.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-lg text-white/50 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0"
+            >
+              Slotly turns any waiting room into a departure board. Book a
+              slot, get a token, and watch your exact position count down —
+              no more sitting around guessing.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+            >
+              <Link
+                to="/register"
+                className="btn-primary px-7 py-3.5 text-[15px] w-full sm:w-auto group"
+              >
+                Book your first appointment
+                <ArrowRight
+                  size={16}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] w-full sm:w-auto rounded-2xl font-semibold border border-white/15 text-white/80 hover:bg-white/5 hover:border-white/25 transition-all"
+              >
+                I already have an account
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 mt-7 text-xs text-white/35"
+            >
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={14} className="text-emerald-400" /> Free
+                to use
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={14} className="text-emerald-400" /> No
+                installation
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={14} className="text-emerald-400" /> Works
+                on any device
+              </span>
+            </motion.div>
+          </div>
+
+          {/* right: signature live board */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="flex items-center justify-center gap-5 mt-6 text-xs text-slate-400 dark:text-slate-500"
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-accent-500" /> Free to use
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-accent-500" /> No
-              installation
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-accent-500" /> Works on
-              any device
-            </span>
+            <LiveBoard />
           </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="max-w-4xl mx-auto mt-20 px-4"
-        >
-          <div className="bg-white dark:bg-[#1a1a2e] p-2 rounded-3xl border border-slate-100 dark:border-[#2a2a42] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-4px_rgba(15,23,42,0.06)]">
-            <div className="bg-slate-50 dark:bg-[#14141f] rounded-2xl p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">
-                    Your queue token
-                  </p>
-                  <p className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 font-mono">
-                    B-014
-                  </p>
-                </div>
-                <span className="badge badge-info">Confirmed</span>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Now serving", value: "B-009" },
-                  { label: "Ahead of you", value: "5" },
-                  { label: "Est. wait", value: "18m" },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="bg-white dark:bg-[#1a1a2e] rounded-xl p-3.5 text-center border border-slate-100 dark:border-[#2a2a42]"
-                  >
-                    <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                      {s.value}
-                    </p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
-      {/* ── Features ─────────────────────────────────────────── */}
-      <section className="px-6 py-20 bg-slate-50 dark:bg-[#14141f]">
+      {/* ── Flow ─────────────────────────────────────────────── */}
+      <section className="relative px-6 sm:px-10 py-20 sm:py-28 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-xl mx-auto mb-16">
+            <span className="text-xs font-semibold tracking-[0.2em] text-primary-300 uppercase">
+              How it works
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-3">
+              Four steps. Zero guessing.
+            </h2>
+            <p className="text-white/45">
+              The same flow every time, whether you're booking a checkup or
+              picking up a repair.
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* connecting line */}
+            <div className="hidden lg:block absolute top-[38px] left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+              {flow.map(({ icon: Icon, step, title, desc }, i) => (
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="relative text-center lg:text-left"
+                >
+                  <div className="relative inline-flex items-center justify-center w-[76px] h-[76px] rounded-2xl bg-[#0f0f1a] border border-white/10 mb-5">
+                    <Icon size={26} strokeWidth={1.75} className="text-primary-300" />
+                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary-500 text-[10px] font-bold flex items-center justify-center">
+                      {step}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-lg mb-1.5">{title}</h3>
+                  <p className="text-sm text-white/45 leading-relaxed">
+                    {desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Capabilities ─────────────────────────────────────── */}
+      <section className="px-6 sm:px-10 py-20 sm:py-24 bg-white/[0.02] border-y border-white/[0.06]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-xl mx-auto mb-14">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-50 tracking-tight mb-3">
-              Everything a front desk needs
+            <h2 className="text-3xl font-bold tracking-tight mb-3">
+              Built to run the whole front desk
             </h2>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-white/45">
               One system to replace paper registers, phone bookings, and
               physical queue tickets.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map(({ icon: Icon, title, desc }, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {capabilities.map(({ icon: Icon, title, desc }, i) => (
               <motion.div
                 key={title}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white dark:bg-[#1a1a2e] p-6 rounded-3xl border border-slate-100 dark:border-[#2a2a42] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-4px_rgba(15,23,42,0.06)]"
+                transition={{ delay: i * 0.06 }}
+                className="bg-[#0f0f1a] p-6 rounded-3xl border border-white/[0.07] hover:border-white/15 transition-colors"
               >
-                <div className="w-11 h-11 rounded-2xl bg-primary-50 dark:bg-primary-500/15 flex items-center justify-center mb-4">
-                  <Icon
-                    size={20}
-                    className="text-primary-600 dark:text-primary-400"
-                    strokeWidth={2.2}
-                  />
+                <div className="w-11 h-11 rounded-2xl bg-primary-500/15 flex items-center justify-center mb-4">
+                  <Icon size={20} className="text-primary-300" strokeWidth={2.2} />
                 </div>
-                <h3 className="font-bold text-slate-900 dark:text-slate-50 mb-1.5">
-                  {title}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {desc}
-                </p>
+                <h3 className="font-bold mb-1.5">{title}</h3>
+                <p className="text-sm text-white/45 leading-relaxed">{desc}</p>
               </motion.div>
             ))}
           </div>
@@ -253,24 +285,24 @@ const Home = () => {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="px-6 py-24">
+      <section className="px-6 py-24 sm:py-28">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center bg-gradient-to-br from-primary-600 to-primary-700 rounded-4xl p-12 sm:p-16 relative overflow-hidden"
+          className="max-w-3xl mx-auto text-center relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-12 sm:p-16"
         >
-          <div className="absolute top-[-20%] right-[-10%] w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <h2 className="relative text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+          <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl -z-10" />
+          <h2 className="relative text-3xl sm:text-4xl font-bold tracking-tight mb-4">
             Stop standing in line.
           </h2>
-          <p className="relative text-primary-100 mb-8 max-w-md mx-auto">
+          <p className="relative text-white/50 mb-8 max-w-md mx-auto">
             Create your account in seconds and book your first appointment
             today.
           </p>
           <Link
             to="/register"
-            className="relative inline-flex items-center gap-2 bg-[#ffffff] text-[#3b32cc] font-semibold rounded-2xl px-7 py-3.5 text-[15px] hover:bg-[#f0f1ff] transition-all"
+            className="relative inline-flex items-center gap-2 btn-primary px-7 py-3.5 text-[15px]"
           >
             Get started for free
             <ArrowRight size={16} />
@@ -279,24 +311,19 @@ const Home = () => {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="px-6 py-10 border-t border-slate-100 dark:border-[#2a2a42]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400 dark:text-slate-500">
+      <footer className="px-6 py-10 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/35">
           <div className="flex items-center gap-2">
-            <Logo size={24} />
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              Slotly
-            </span>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 tracking-wide uppercase">
+            <Logo size={22} />
+            <span className="font-semibold text-white/60">Slotly</span>
+            <span className="text-[10px] font-medium text-white/30 tracking-widest uppercase">
               Smart Queue Booking
             </span>
           </div>
-          <div className="flex justify-between">
-            <span>Developed By : - </span>
-            <span className="font-mono text-slate-700">Sangam Kumar</span>
-          </div>
-          <p>
-            © 2026 Slotly. Built for hospitals, clinics, and service centers.
-          </p>
+          <span className="font-mono text-white/40">
+            Developed by Sangam Kumar
+          </span>
+          <p>© 2026 Slotly. Built for hospitals, clinics, and service centers.</p>
         </div>
       </footer>
     </div>
