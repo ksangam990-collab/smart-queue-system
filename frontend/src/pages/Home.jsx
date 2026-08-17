@@ -1,7 +1,14 @@
 // frontend/src/pages/Home.jsx
 
+import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  AnimatePresence,
+} from "framer-motion";
 import {
   Calendar,
   Radar,
@@ -13,9 +20,15 @@ import {
   Users,
   ArrowRight,
   CheckCircle2,
+  Sun,
+  Moon,
+  ChevronDown,
 } from "lucide-react";
 import Logo from "../components/common/Logo";
 import LiveBoard from "../components/home/LiveBoard";
+import MagneticButton from "../components/home/MagneticButton";
+import Spotlight from "../components/home/Spotlight";
+import { useTheme } from "../contexts/ThemeContext";
 
 const flow = [
   {
@@ -67,15 +80,70 @@ const capabilities = [
   },
 ];
 
+const marqueeItems = [
+  "Live queue tracking",
+  "Instant tokens",
+  "Role-based dashboards",
+  "Real-time updates",
+  "Secure authentication",
+  "Exportable reports",
+];
+
+const blurReveal = {
+  hidden: { opacity: 0, y: 24, filter: "blur(8px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
 const Home = () => {
+  const { isDark, toggleTheme } = useTheme();
+
+  // ── scroll-linked nav background ──────────────────────────
+  const { scrollY } = useScroll();
+  const navBgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
+
+  // ── parallax ambient blobs ─────────────────────────────────
+  const blobY1 = useTransform(scrollY, [0, 900], [0, 160]);
+  const blobY2 = useTransform(scrollY, [0, 900], [0, -120]);
+
+  // ── mouse-follow spotlight (hero only) ─────────────────────
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const handleHeroMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
+  // ── scroll-linked "flow" connector line ────────────────────
+  const flowRef = useRef(null);
+  const { scrollYProgress: flowProgress } = useScroll({
+    target: flowRef,
+    offset: ["start 75%", "end 55%"],
+  });
+
   return (
-    <div className="min-h-screen bg-[#07070d] text-white overflow-x-hidden selection:bg-primary-500/30">
+    <div className="min-h-screen bg-[#f7f7fb] dark:bg-[#05050b] text-slate-900 dark:text-white overflow-x-hidden selection:bg-primary-500/30 transition-colors duration-500">
       {/* ── ambient atmosphere ───────────────────────────────── */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-primary-600/[0.18] rounded-full blur-[120px] animate-[pulseSoft_9s_ease-in-out_infinite]" />
-        <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-emerald-500/[0.10] rounded-full blur-[120px] animate-[pulseSoft_11s_ease-in-out_infinite]" />
+        <motion.div
+          style={{ y: blobY1 }}
+          animate={{ opacity: [0.5, 0.85, 0.5], scale: [1, 1.08, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-[8%] w-[600px] h-[600px] bg-primary-400/10 dark:bg-primary-600/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+          style={{ y: blobY2 }}
+          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute top-[18%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/[0.08] dark:bg-emerald-500/[0.12] rounded-full blur-[120px]"
+        />
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.025] dark:opacity-[0.035]"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
@@ -84,63 +152,99 @@ const Home = () => {
       </div>
 
       {/* ── Nav ──────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-30 backdrop-blur-xl bg-[#07070d]/70 border-b border-white/[0.06]">
-        <div className="flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
+      <nav className="sticky top-0 z-30">
+        <motion.div
+          style={{ opacity: navBgOpacity }}
+          className="absolute inset-0 backdrop-blur-xl bg-white/80 dark:bg-[#05050b]/75 border-b border-slate-200/70 dark:border-white/[0.06]"
+        />
+        <div className="relative flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-2.5">
             <Logo size={34} />
             <div className="flex flex-col leading-none">
               <span className="font-bold text-lg tracking-tight">Slotly</span>
-              <span className="text-[10px] font-medium text-white/35 tracking-widest uppercase">
+              <span className="text-[10px] font-medium text-slate-400 dark:text-white/35 tracking-widest uppercase">
                 Smart Queue Booking
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors overflow-hidden"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isDark ? "moon" : "sun"}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex"
+                >
+                  {isDark ? <Moon size={17} /> : <Sun size={17} />}
+                </motion.span>
+              </AnimatePresence>
+            </button>
             <Link
               to="/login"
-              className="hidden sm:inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all"
+              className="hidden sm:inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
             >
               Sign in
             </Link>
-            <Link to="/register" className="btn-primary text-sm">
-              Get started
-            </Link>
+            <MagneticButton strength={0.25}>
+              <Link to="/register" className="btn-primary text-sm">
+                Get started
+              </Link>
+            </MagneticButton>
           </div>
         </div>
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative px-6 sm:px-10 pt-16 pb-24 sm:pt-20 sm:pb-32 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-16 lg:gap-10 items-center">
+      <section
+        onMouseMove={handleHeroMouseMove}
+        className="relative px-6 sm:px-10 pt-16 pb-16 sm:pt-20 sm:pb-24 max-w-7xl mx-auto"
+      >
+        <Spotlight
+          mouseX={mouseX}
+          mouseY={mouseY}
+          intensity={isDark ? 0.18 : 0.07}
+        />
+
+        <div className="relative grid lg:grid-cols-[1.05fr_0.95fr] gap-16 lg:gap-10 items-center">
           {/* left: copy */}
           <div className="text-center lg:text-left">
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-white/70 text-xs font-semibold mb-7"
+              initial="hidden"
+              animate="visible"
+              variants={blurReveal}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 text-xs font-semibold mb-7 shadow-sm dark:shadow-none"
             >
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse" />
               Live for hospitals, clinics & service centers
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
+              initial="hidden"
+              animate="visible"
+              variants={blurReveal}
+              transition={{ ...blurReveal.visible.transition, delay: 0.08 }}
               className="text-[2.75rem] leading-[1.05] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight mb-6"
             >
               Your queue,
               <br />
-              <span className="bg-gradient-to-r from-primary-300 via-primary-400 to-emerald-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary-600 via-primary-500 to-emerald-500 dark:from-primary-300 dark:via-primary-400 dark:to-emerald-300 bg-clip-text text-transparent">
                 live on screen.
               </span>
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-lg text-white/50 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0"
+              initial="hidden"
+              animate="visible"
+              variants={blurReveal}
+              transition={{ ...blurReveal.visible.transition, delay: 0.16 }}
+              className="text-lg text-slate-500 dark:text-white/50 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0"
             >
               Slotly turns any waiting room into a departure board. Book a
               slot, get a token, and watch your exact position count down —
@@ -148,99 +252,173 @@ const Home = () => {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
+              initial="hidden"
+              animate="visible"
+              variants={blurReveal}
+              transition={{ ...blurReveal.visible.transition, delay: 0.24 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
             >
-              <Link
-                to="/register"
-                className="btn-primary px-7 py-3.5 text-[15px] w-full sm:w-auto group"
-              >
-                Book your first appointment
-                <ArrowRight
-                  size={16}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
-              </Link>
+              <MagneticButton className="w-full sm:w-auto">
+                <Link
+                  to="/register"
+                  className="btn-primary px-7 py-3.5 text-[15px] w-full sm:w-auto group"
+                >
+                  Book your first appointment
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
+                </Link>
+              </MagneticButton>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] w-full sm:w-auto rounded-2xl font-semibold border border-white/15 text-white/80 hover:bg-white/5 hover:border-white/25 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] w-full sm:w-auto rounded-2xl font-semibold border border-slate-200 dark:border-white/15 text-slate-700 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/25 transition-all"
               >
                 I already have an account
               </Link>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 mt-7 text-xs text-white/35"
+              initial="hidden"
+              animate="visible"
+              variants={blurReveal}
+              transition={{ ...blurReveal.visible.transition, delay: 0.32 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 mt-7 text-xs text-slate-400 dark:text-white/35"
             >
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-400" /> Free
-                to use
+                <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                Free to use
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-400" /> No
-                installation
+                <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                No installation
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-400" /> Works
-                on any device
+                <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                Works on any device
               </span>
             </motion.div>
           </div>
 
-          {/* right: signature live board */}
+          {/* right: signature live board — gently floats */}
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 24, scale: 0.97, filter: "blur(10px)" }}
+            animate={{
+              opacity: 1,
+              y: [0, -10, 0],
+              scale: 1,
+              filter: "blur(0px)",
+            }}
+            transition={{
+              opacity: { duration: 0.7, delay: 0.2 },
+              scale: { duration: 0.7, delay: 0.2 },
+              filter: { duration: 0.7, delay: 0.2 },
+              y: {
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              },
+            }}
           >
             <LiveBoard />
           </motion.div>
         </div>
+
+        {/* scroll cue */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.6 }}
+          className="hidden sm:flex justify-center mt-16"
+        >
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="text-slate-300 dark:text-white/20"
+          >
+            <ChevronDown size={22} />
+          </motion.div>
+        </motion.div>
       </section>
 
+      {/* ── Marquee ──────────────────────────────────────────── */}
+      <div className="relative border-y border-slate-200/70 dark:border-white/[0.06] bg-white/60 dark:bg-white/[0.02] py-4 overflow-hidden">
+        <div className="flex w-max animate-marquee">
+          {[...marqueeItems, ...marqueeItems, ...marqueeItems].map(
+            (item, i) => (
+              <span
+                key={i}
+                className="flex items-center gap-3 mx-6 text-sm font-medium text-slate-400 dark:text-white/30 whitespace-nowrap"
+              >
+                {item}
+                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/20" />
+              </span>
+            ),
+          )}
+        </div>
+      </div>
+
       {/* ── Flow ─────────────────────────────────────────────── */}
-      <section className="relative px-6 sm:px-10 py-20 sm:py-28 border-t border-white/[0.06]">
+      <section
+        ref={flowRef}
+        className="relative px-6 sm:px-10 py-20 sm:py-28"
+      >
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <span className="text-xs font-semibold tracking-[0.2em] text-primary-300 uppercase">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.5 }}
+            variants={blurReveal}
+            className="text-center max-w-xl mx-auto mb-16"
+          >
+            <span className="text-xs font-semibold tracking-[0.2em] text-primary-600 dark:text-primary-300 uppercase">
               How it works
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-3">
               Four steps. Zero guessing.
             </h2>
-            <p className="text-white/45">
+            <p className="text-slate-500 dark:text-white/45">
               The same flow every time, whether you're booking a checkup or
               picking up a repair.
             </p>
-          </div>
+          </motion.div>
 
           <div className="relative">
-            {/* connecting line */}
-            <div className="hidden lg:block absolute top-[38px] left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            {/* scroll-linked connecting line */}
+            <div className="hidden lg:block absolute top-[38px] left-[12%] right-[12%] h-px bg-slate-200 dark:bg-white/10 overflow-hidden">
+              <motion.div
+                style={{ scaleX: flowProgress, transformOrigin: "left" }}
+                className="h-full w-full bg-gradient-to-r from-primary-500 to-emerald-500"
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
               {flow.map(({ icon: Icon, step, title, desc }, i) => (
                 <motion.div
                   key={step}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.5 }}
+                  variants={blurReveal}
+                  transition={{
+                    ...blurReveal.visible.transition,
+                    delay: i * 0.12,
+                  }}
                   className="relative text-center lg:text-left"
                 >
-                  <div className="relative inline-flex items-center justify-center w-[76px] h-[76px] rounded-2xl bg-[#0f0f1a] border border-white/10 mb-5">
-                    <Icon size={26} strokeWidth={1.75} className="text-primary-300" />
-                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary-500 text-[10px] font-bold flex items-center justify-center">
+                  <div className="relative inline-flex items-center justify-center w-[76px] h-[76px] rounded-2xl bg-white dark:bg-[#0f0f1a] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none mb-5">
+                    <Icon
+                      size={26}
+                      strokeWidth={1.75}
+                      className="text-primary-500 dark:text-primary-300"
+                    />
+                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary-500 text-white text-[10px] font-bold flex items-center justify-center">
                       {step}
                     </span>
                   </div>
                   <h3 className="font-bold text-lg mb-1.5">{title}</h3>
-                  <p className="text-sm text-white/45 leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-white/45 leading-relaxed">
                     {desc}
                   </p>
                 </motion.div>
@@ -251,33 +429,41 @@ const Home = () => {
       </section>
 
       {/* ── Capabilities ─────────────────────────────────────── */}
-      <section className="px-6 sm:px-10 py-20 sm:py-24 bg-white/[0.02] border-y border-white/[0.06]">
+      <section className="px-6 sm:px-10 py-20 sm:py-24 bg-white/70 dark:bg-white/[0.02] border-y border-slate-200/70 dark:border-white/[0.06]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-14">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.5 }}
+            variants={blurReveal}
+            className="text-center max-w-xl mx-auto mb-14"
+          >
             <h2 className="text-3xl font-bold tracking-tight mb-3">
               Built to run the whole front desk
             </h2>
-            <p className="text-white/45">
+            <p className="text-slate-500 dark:text-white/45">
               One system to replace paper registers, phone bookings, and
               physical queue tickets.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {capabilities.map(({ icon: Icon, title, desc }, i) => (
               <motion.div
                 key={title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                className="bg-[#0f0f1a] p-6 rounded-3xl border border-white/[0.07] hover:border-white/15 transition-colors"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.4 }}
+                variants={blurReveal}
+                transition={{ ...blurReveal.visible.transition, delay: i * 0.08 }}
+                whileHover={{ y: -6 }}
+                className="bg-white dark:bg-[#0f0f1a] p-6 rounded-3xl border border-slate-200 dark:border-white/[0.07] hover:border-primary-200 dark:hover:border-white/15 shadow-sm dark:shadow-none transition-colors"
               >
-                <div className="w-11 h-11 rounded-2xl bg-primary-500/15 flex items-center justify-center mb-4">
-                  <Icon size={20} className="text-primary-300" strokeWidth={2.2} />
+                <div className="w-11 h-11 rounded-2xl bg-primary-50 dark:bg-primary-500/15 flex items-center justify-center mb-4">
+                  <Icon size={20} className="text-primary-500 dark:text-primary-300" strokeWidth={2.2} />
                 </div>
                 <h3 className="font-bold mb-1.5">{title}</h3>
-                <p className="text-sm text-white/45 leading-relaxed">{desc}</p>
+                <p className="text-sm text-slate-500 dark:text-white/45 leading-relaxed">{desc}</p>
               </motion.div>
             ))}
           </div>
@@ -287,40 +473,43 @@ const Home = () => {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="px-6 py-24 sm:py-28">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-12 sm:p-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+          variants={blurReveal}
+          className="max-w-3xl mx-auto text-center relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-gradient-to-b dark:from-white/[0.04] dark:to-transparent shadow-xl shadow-slate-200/50 dark:shadow-none p-12 sm:p-16"
         >
-          <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl -z-10" />
+          <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-400/15 dark:bg-primary-500/20 rounded-full blur-3xl -z-10" />
           <h2 className="relative text-3xl sm:text-4xl font-bold tracking-tight mb-4">
             Stop standing in line.
           </h2>
-          <p className="relative text-white/50 mb-8 max-w-md mx-auto">
+          <p className="relative text-slate-500 dark:text-white/50 mb-8 max-w-md mx-auto">
             Create your account in seconds and book your first appointment
             today.
           </p>
-          <Link
-            to="/register"
-            className="relative inline-flex items-center gap-2 btn-primary px-7 py-3.5 text-[15px]"
-          >
-            Get started for free
-            <ArrowRight size={16} />
-          </Link>
+          <MagneticButton>
+            <Link
+              to="/register"
+              className="relative inline-flex items-center gap-2 btn-primary px-7 py-3.5 text-[15px]"
+            >
+              Get started for free
+              <ArrowRight size={16} />
+            </Link>
+          </MagneticButton>
         </motion.div>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="px-6 py-10 border-t border-white/[0.06]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/35">
+      <footer className="px-6 py-10 border-t border-slate-200/70 dark:border-white/[0.06]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400 dark:text-white/35">
           <div className="flex items-center gap-2">
             <Logo size={22} />
-            <span className="font-semibold text-white/60">Slotly</span>
-            <span className="text-[10px] font-medium text-white/30 tracking-widest uppercase">
+            <span className="font-semibold text-slate-600 dark:text-white/60">Slotly</span>
+            <span className="text-[10px] font-medium text-slate-300 dark:text-white/30 tracking-widest uppercase">
               Smart Queue Booking
             </span>
           </div>
-          <span className="font-mono text-white/40">
+          <span className="font-mono text-slate-400 dark:text-white/40">
             Developed by Sangam Kumar
           </span>
           <p>© 2026 Slotly. Built for hospitals, clinics, and service centers.</p>
