@@ -30,6 +30,7 @@ import LiveBoard from "../components/home/LiveBoard";
 import MagneticButton from "../components/home/MagneticButton";
 import Spotlight from "../components/home/Spotlight";
 import Preloader from "../components/home/Preloader";
+import CustomCursor from "../components/home/CustomCursor";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLenis } from "../hooks/useLenis";
 
