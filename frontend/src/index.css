@@ -609,11 +609,3 @@
 .animate-marquee {
   animation: marquee 26s linear infinite;
 }
-
-/* ── Home page: hide system cursor for the custom cursor (desktop only) ── */
-@media (pointer: fine) {
-  .home-cinematic,
-  .home-cinematic * {
-    cursor: none;
-  }
-}
