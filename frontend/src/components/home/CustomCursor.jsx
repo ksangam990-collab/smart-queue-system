@@ -16,8 +16,8 @@ const CustomCursor = () => {
 
   const dotX = useMotionValue(-100);
   const dotY = useMotionValue(-100);
-  const ringX = useSpring(dotX, { stiffness: 300, damping: 28, mass: 0.4 });
-  const ringY = useSpring(dotY, { stiffness: 300, damping: 28, mass: 0.4 });
+  const ringX = useSpring(dotX, { stiffness: 600, damping: 45, mass: 0.15 });
+  const ringY = useSpring(dotY, { stiffness: 600, damping: 45, mass: 0.15 });
 
   useEffect(() => {
     const isFinePointer = window.matchMedia("(pointer: fine)").matches;
