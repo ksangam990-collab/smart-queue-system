@@ -653,7 +653,7 @@ const Home = () => {
                     </a>
                   </li>
                   <li className="text-slate-500 dark:text-white/40">
-                    Developed by-Sangam Kumar
+                    Developed by :- Sangam Kumar
                   </li>
                 </ul>
               </div>
