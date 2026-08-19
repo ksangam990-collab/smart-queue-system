@@ -24,6 +24,7 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  Code2,
 } from "lucide-react";
 import Logo from "../components/common/Logo";
 import LiveBoard from "../components/home/LiveBoard";
@@ -186,11 +187,15 @@ const Home = () => {
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
           <motion.div
             style={{ y: blobY1 }}
-            className="absolute top-[-10%] left-[8%] w-[600px] h-[600px] bg-primary-400/10 dark:bg-primary-600/20 rounded-full blur-[120px] will-change-transform"
+            animate={{ opacity: [0.5, 0.85, 0.5], scale: [1, 1.08, 1] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[-10%] left-[8%] w-[600px] h-[600px] bg-primary-400/10 dark:bg-primary-600/20 rounded-full blur-[120px]"
           />
           <motion.div
             style={{ y: blobY2 }}
-            className="absolute top-[18%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/[0.08] dark:bg-emerald-500/[0.12] rounded-full blur-[120px] will-change-transform"
+            animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="absolute top-[18%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/[0.08] dark:bg-emerald-500/[0.12] rounded-full blur-[120px]"
           />
           <div
             className="absolute inset-0 opacity-[0.025] dark:opacity-[0.035]"
@@ -440,7 +445,7 @@ const Home = () => {
         </div>
 
         {/* ── Flow ─────────────────────────────────────────────── */}
-        <section ref={flowRef} className="relative px-6 sm:px-10 py-20 sm:py-28">
+        <section id="how-it-works" ref={flowRef} className="relative px-6 sm:px-10 py-20 sm:py-28">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial="hidden"
@@ -498,7 +503,7 @@ const Home = () => {
         </section>
 
         {/* ── Capabilities ─────────────────────────────────────── */}
-        <section className="px-6 sm:px-10 py-20 sm:py-24 bg-white/70 dark:bg-white/[0.02] border-y border-slate-200/70 dark:border-white/[0.06]">
+        <section id="capabilities" className="px-6 sm:px-10 py-20 sm:py-24 bg-white/70 dark:bg-white/[0.02] border-y border-slate-200/70 dark:border-white/[0.06]">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial="hidden"
@@ -571,19 +576,100 @@ const Home = () => {
         </section>
 
         {/* ── Footer ───────────────────────────────────────────── */}
-        <footer className="px-6 py-10 border-t border-slate-200/70 dark:border-white/[0.06]">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400 dark:text-white/35">
-            <div className="flex items-center gap-2">
-              <Logo size={22} />
-              <span className="font-semibold text-slate-600 dark:text-white/60">Slotly</span>
-              <span className="text-[10px] font-medium text-slate-300 dark:text-white/30 tracking-widest uppercase">
-                Smart Queue Booking
+        <footer className="relative px-6 sm:px-10 pt-16 pb-8 border-t border-slate-200/70 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.02]">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 sm:gap-8 pb-12">
+              {/* brand column */}
+              <div className="col-span-2 sm:col-span-1">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <Logo size={32} />
+                  <span className="font-bold text-lg tracking-tight">Slotly</span>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-white/40 leading-relaxed max-w-[220px]">
+                  Live queue tracking and appointment booking for hospitals,
+                  clinics, and service centers.
+                </p>
+              </div>
+
+              {/* product */}
+              <div>
+                <h4 className="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-white/30 mb-4">
+                  Product
+                </h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a href="#how-it-works" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      How it works
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#capabilities" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Capabilities
+                    </a>
+                  </li>
+                  <li>
+                    <Link to="/register" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Get started
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* account */}
+              <div>
+                <h4 className="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-white/30 mb-4">
+                  Account
+                </h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <Link to="/login" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Sign in
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Create account
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/forgot-password" data-cursor="hover" className="text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Forgot password
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* connect */}
+              <div>
+                <h4 className="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-white/30 mb-4">
+                  Connect
+                </h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a
+                      href="https://github.com/ksangam990-collab/smart-queue-system"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-cursor="hover"
+                      className="flex items-center gap-1.5 text-slate-600 dark:text-white/55 hover:text-slate-900 dark:hover:text-white transition-colors"
+                    >
+                      <Code2 size={14} /> GitHub
+                    </a>
+                  </li>
+                  <li className="text-slate-500 dark:text-white/40">
+                    Developed by Sangam Kumar
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-200/70 dark:border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-white/30">
+              <p>© 2026 Slotly. Built for hospitals, clinics, and service centers.</p>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse" />
+                All systems operational
               </span>
             </div>
-            <span className="font-mono text-slate-400 dark:text-white/40">
-              Developed by Sangam Kumar
-            </span>
-            <p>© 2026 Slotly. Built for hospitals, clinics, and service centers.</p>
           </div>
         </footer>
       </div>
