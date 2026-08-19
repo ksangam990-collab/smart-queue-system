@@ -187,15 +187,11 @@ const Home = () => {
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
           <motion.div
             style={{ y: blobY1 }}
-            animate={{ opacity: [0.5, 0.85, 0.5], scale: [1, 1.08, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[-10%] left-[8%] w-[600px] h-[600px] bg-primary-400/10 dark:bg-primary-600/20 rounded-full blur-[120px]"
+            className="absolute top-[-10%] left-[8%] w-[600px] h-[600px] bg-primary-400/10 dark:bg-primary-600/20 rounded-full blur-[120px] will-change-transform"
           />
           <motion.div
             style={{ y: blobY2 }}
-            animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute top-[18%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/[0.08] dark:bg-emerald-500/[0.12] rounded-full blur-[120px]"
+            className="absolute top-[18%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/[0.08] dark:bg-emerald-500/[0.12] rounded-full blur-[120px] will-change-transform"
           />
           <div
             className="absolute inset-0 opacity-[0.025] dark:opacity-[0.035]"
