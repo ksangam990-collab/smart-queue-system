@@ -12,17 +12,21 @@ import {
   resendVerification,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { authLimiter } from '../middleware/rateLimiter.js';
+import {
+  authLimiter,
+  passwordResetLimiter,
+  resendVerificationLimiter,
+} from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Public routes
 router.post('/register',                    authLimiter, register);
 router.post('/login',                       authLimiter, login);
-router.post('/forgot-password',             authLimiter, forgotPassword);
+router.post('/forgot-password',             authLimiter, passwordResetLimiter, forgotPassword);
 router.put('/reset-password/:token',                     resetPassword);
 router.get('/verify-email/:token',                       verifyEmail);
-router.post('/resend-verification',         authLimiter, resendVerification);
+router.post('/resend-verification',         authLimiter, resendVerificationLimiter, resendVerification);
 
 // Protected routes (login required)
 router.post('/logout',   protect, logout);
