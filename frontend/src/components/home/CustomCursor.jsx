@@ -6,6 +6,7 @@
 // never triggers a re-render, keeping it (and the rest of the page) fast.
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 const isFinePointer =
@@ -57,7 +58,13 @@ const CustomCursor = () => {
 
   if (!isFinePointer) return null;
 
-  return (
+  // Rendered via portal straight into <body>. This matters: any ancestor
+  // with an active CSS `filter` (e.g. the blur-fade page transitions used
+  // on the auth pages) becomes a new containing block for `position: fixed`
+  // descendants per the CSS spec — which would silently re-anchor this
+  // cursor to that ancestor's box instead of the real viewport. Portaling
+  // to document.body sidesteps that regardless of where this is mounted.
+  return createPortal(
     <>
       <motion.div
         style={{ x: dotX, y: dotY, opacity }}
@@ -67,7 +74,8 @@ const CustomCursor = () => {
         style={{ x: ringX, y: ringY, opacity, scale: ringScale }}
         className="fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-white/40 pointer-events-none z-[90] mix-blend-difference"
       />
-    </>
+    </>,
+    document.body
   );
 };
 
