@@ -16,6 +16,12 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   });
   if (!response.ok) {
     const errorBody = await response.text();
+    console.error('[sendEmail] Resend API rejected the request:', {
+      status:  response.status,
+      to,
+      subject,
+      body:    errorBody,
+    });
     throw new Error(`Resend API error (${response.status}): ${errorBody}`);
   }
 };
