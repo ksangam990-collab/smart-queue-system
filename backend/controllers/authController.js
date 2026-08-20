@@ -14,9 +14,10 @@ import {
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -54,7 +55,10 @@ export const register = async (req, res) => {
         ),
       });
     } catch (emailError) {
-      console.error('Verification email failed to send:', emailError.message);
+      console.error('[register] Verification email failed to send:', {
+        email: user.email,
+        error: emailError.message,
+      });
     }
 
     const token = generateToken(res, user._id, user.role);
@@ -98,7 +102,7 @@ export const login = async (req, res) => {
     }
 
     // Find user and include password for comparison
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (!user) {
       return res.status(401).json({
@@ -146,6 +150,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('Login error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -182,7 +187,7 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email?.toLowerCase().trim() });
     if (!user) {
       // Don't reveal whether email exists
       return res.status(200).json({
@@ -210,6 +215,10 @@ export const forgotPassword = async (req, res) => {
         ),
       });
     } catch (emailError) {
+      console.error('[forgotPassword] Reset email failed to send:', {
+        email: user.email,
+        error: emailError.message,
+      });
       user.resetPasswordToken   = undefined;
       user.resetPasswordExpire  = undefined;
       await user.save({ validateBeforeSave: false });
@@ -224,6 +233,7 @@ export const forgotPassword = async (req, res) => {
       message: 'If that email exists, a reset link has been sent.',
     });
   } catch (error) {
+    console.error('Forgot-password error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -300,7 +310,7 @@ export const resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email?.toLowerCase().trim() });
     if (!user) {
       return res.status(200).json({
         success: true,
@@ -334,7 +344,10 @@ export const resendVerification = async (req, res) => {
         ),
       });
     } catch (emailError) {
-      console.error('Resend verification email failed:', emailError.message);
+      console.error('[resendVerification] Verification email failed to send:', {
+        email: user.email,
+        error: emailError.message,
+      });
       return res.status(500).json({
         success: false,
         message: 'Email could not be sent. Try again later.',
@@ -346,6 +359,7 @@ export const resendVerification = async (req, res) => {
       message: 'Verification email sent!',
     });
   } catch (error) {
+    console.error('Resend-verification error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
