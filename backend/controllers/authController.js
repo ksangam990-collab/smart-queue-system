@@ -200,18 +200,16 @@ export const forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     try {
-      await sendEmail({
+            await sendEmail({
         to: user.email,
-        subject: 'Password reset request for your Slotly account',
+        subject: 'Reset your password',
         html: getPasswordResetEmailHTML(
           user.name,
-          user.email,
           resetToken,
           process.env.CLIENT_URL
         ),
         text: getPasswordResetEmailText(
           user.name,
-          user.email,
           resetToken,
           process.env.CLIENT_URL
         ),
