@@ -8,6 +8,8 @@ import { Lock, Eye, EyeOff } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import Logo from "../../components/common/Logo";
+import AuthCenteredShell from "../../components/auth/AuthCenteredShell";
+import MagneticButton from "../../components/home/MagneticButton";
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -39,21 +41,21 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="auth-container">
+    <AuthCenteredShell pageKey="reset-password">
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="auth-card"
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="auth-card-glass relative z-10"
       >
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-primary-500 flex items-center justify-center mx-auto mb-4">
             <Logo size={56} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             Set new password
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Choose a strong password
           </p>
         </div>
@@ -69,6 +71,7 @@ const ResetPassword = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Min. 6 characters"
+                data-cursor="hover"
                 className={`form-input pl-11 pr-11 ${errors.password ? "border-red-400" : ""}`}
                 {...register("password", {
                   required: "Password is required",
@@ -80,15 +83,14 @@ const ResetPassword = () => {
               />
               <button
                 type="button"
+                data-cursor="hover"
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {errors.password && (
-              <p className="form-error">{errors.password.message}</p>
-            )}
+            {errors.password && <p className="form-error">{errors.password.message}</p>}
           </div>
 
           <div>
@@ -101,11 +103,11 @@ const ResetPassword = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Repeat new password"
+                data-cursor="hover"
                 className={`form-input pl-11 ${errors.confirmPassword ? "border-red-400" : ""}`}
                 {...register("confirmPassword", {
                   required: "Please confirm your password",
-                  validate: (val) =>
-                    val === password || "Passwords do not match",
+                  validate: (val) => val === password || "Passwords do not match",
                 })}
               />
             </div>
@@ -114,23 +116,26 @@ const ResetPassword = () => {
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-3"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Resetting...
-              </span>
-            ) : (
-              "Reset password"
-            )}
-          </button>
+          <MagneticButton className="w-full block" strength={0.15}>
+            <button
+              type="submit"
+              disabled={loading}
+              data-cursor="hover"
+              className="btn-primary w-full py-3"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Resetting...
+                </span>
+              ) : (
+                "Reset password"
+              )}
+            </button>
+          </MagneticButton>
         </form>
       </motion.div>
-    </div>
+    </AuthCenteredShell>
   );
 };
 
