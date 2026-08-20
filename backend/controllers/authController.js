@@ -200,7 +200,7 @@ export const forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     try {
-            await sendEmail({
+      await sendEmail({
         to: user.email,
         subject: 'Reset your password',
         html: getPasswordResetEmailHTML(
