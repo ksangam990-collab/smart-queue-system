@@ -181,6 +181,15 @@
       0 4px 6px rgba(15, 23, 42, 0.03),
       0 24px 48px -12px rgba(91, 95, 245, 0.18);
   }
+
+  /* Glassmorphic auth card used by the cinematic auth pages */
+  .auth-card-glass {
+    @apply relative rounded-4xl p-8 w-full max-w-md;
+    @apply bg-white/70 backdrop-blur-xl border border-white/60;
+    box-shadow:
+      0 4px 6px rgba(15, 23, 42, 0.03),
+      0 24px 48px -12px rgba(91, 95, 245, 0.18);
+  }
 }
 /* ── Dark mode overrides ─────────────────────────────────── */
 .dark body {
@@ -280,6 +289,11 @@
 
 .dark .auth-card {
   background-color: #1a1a2e;
+}
+
+.dark .auth-card-glass {
+  background-color: rgba(26, 26, 46, 0.65);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .dark ::-webkit-scrollbar-thumb {
@@ -614,6 +628,14 @@
 @media (pointer: fine) {
   .home-cinematic,
   .home-cinematic * {
+    cursor: none;
+  }
+}
+
+/* ── Auth pages: same custom-cursor treatment (desktop only) ────────── */
+@media (pointer: fine) {
+  .auth-cinematic,
+  .auth-cinematic * {
     cursor: none;
   }
 }
