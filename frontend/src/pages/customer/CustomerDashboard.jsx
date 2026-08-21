@@ -79,11 +79,26 @@ const CustomerDashboard = () => {
           background: 'linear-gradient(135deg, #4740e8 0%, #5b5ff5 55%, #3b32cc 100%)',
         }}
       >
-        {/* Drifting accent glow, echoing the auth brand panel */}
+        {/* Faint grid, matching the auth brand panel's texture */}
+        <div
+          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        {/* Drifting accent glows, echoing the auth brand panel */}
         <motion.div
           className="absolute -top-10 -right-10 w-56 h-56 bg-accent-400/20 rounded-full blur-3xl pointer-events-none"
           animate={{ x: [0, 15, 0], y: [0, 20, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute -bottom-16 left-1/3 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"
+          animate={{ x: [0, -15, 0], y: [0, -10, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
         />
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-white">
@@ -96,7 +111,8 @@ const CustomerDashboard = () => {
         <MagneticButton className="relative z-10" strength={0.2}>
           <button
             onClick={() => navigate('/book')}
-            className="bg-white text-primary-600 hover:bg-primary-50 font-semibold rounded-2xl px-5 py-2.5 text-sm transition-colors inline-flex items-center gap-2 shadow-lg shadow-primary-900/20"
+            style={{ backgroundColor: '#ffffff', color: '#4740e8' }}
+            className="hover:brightness-95 font-semibold rounded-2xl px-5 py-2.5 text-sm transition-[filter] inline-flex items-center gap-2 shadow-lg shadow-primary-900/20"
           >
             <Plus size={16} /> Book Appointment
           </button>
@@ -125,8 +141,10 @@ const CustomerDashboard = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="dash-card p-6"
+          className="dash-card overflow-hidden"
         >
+          <div className="h-1 bg-gradient-to-r from-primary-500 via-accent-400 to-primary-500" />
+          <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-800">Live Queue</h3>
             <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
@@ -170,6 +188,7 @@ const CustomerDashboard = () => {
           >
             View Full Queue <ChevronRight size={14} />
           </button>
+          </div>
         </motion.div>
 
         {/* Recent bookings */}
@@ -179,6 +198,7 @@ const CustomerDashboard = () => {
           transition={{ delay: 0.3 }}
           className="dash-card overflow-hidden lg:col-span-2"
         >
+          <div className="h-1 bg-gradient-to-r from-primary-500 via-accent-400 to-primary-500" />
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="text-base font-semibold text-slate-800">Recent Bookings</h3>
             <button
