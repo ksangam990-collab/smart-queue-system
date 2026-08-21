@@ -6,6 +6,7 @@ import { Calendar, Clock, Zap, Star, Plus, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/common/StatsCard';
 import Badge from '../../components/common/Badge';
+import MagneticButton from '../../components/home/MagneticButton';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 
@@ -73,22 +74,33 @@ const CustomerDashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        style={{
+          background: 'linear-gradient(135deg, #4740e8 0%, #5b5ff5 55%, #3b32cc 100%)',
+        }}
       >
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">
+        {/* Drifting accent glow, echoing the auth brand panel */}
+        <motion.div
+          className="absolute -top-10 -right-10 w-56 h-56 bg-accent-400/20 rounded-full blur-3xl pointer-events-none"
+          animate={{ x: [0, 15, 0], y: [0, 20, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-white">
             Hi, {user?.name?.split(' ')[0]}! 👋
           </h2>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-primary-100 text-sm mt-1">
             Manage your appointments and track your queue.
           </p>
         </div>
-        <button
-          onClick={() => navigate('/book')}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={16} /> Book Appointment
-        </button>
+        <MagneticButton className="relative z-10" strength={0.2}>
+          <button
+            onClick={() => navigate('/book')}
+            className="bg-white text-primary-600 hover:bg-primary-50 font-semibold rounded-2xl px-5 py-2.5 text-sm transition-colors inline-flex items-center gap-2 shadow-lg shadow-primary-900/20"
+          >
+            <Plus size={16} /> Book Appointment
+          </button>
+        </MagneticButton>
       </motion.div>
 
       {/* Stats */}
@@ -129,13 +141,19 @@ const CustomerDashboard = () => {
               <p className="text-3xl font-bold text-primary-500 mb-4">
                 {liveQueue.currentToken || '—'}
               </p>
-              <div className="bg-primary-50 rounded-2xl p-4 mb-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="relative bg-primary-50 rounded-2xl p-4 mb-4"
+              >
+                <span className="absolute inset-0 rounded-2xl border-2 border-primary-300 animate-pulse-soft pointer-events-none" />
                 <p className="text-sm text-slate-500 mb-1">Your Token</p>
                 <p className="text-2xl font-bold text-slate-800">{liveQueue.token}</p>
                 <p className="text-xs text-slate-500 mt-1">
                   {Math.max((liveQueue.position || 1) - 1, 0)} people ahead
                 </p>
-              </div>
+              </motion.div>
               <p className="text-sm text-slate-500">
                 Est. wait: <span className="font-semibold text-slate-700">~{liveQueue.estimatedWait || 0} mins</span>
               </p>
@@ -210,27 +228,37 @@ const CustomerDashboard = () => {
 
       {/* Quick actions */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.06 } },
+        }}
         className="grid grid-cols-2 sm:grid-cols-4 gap-4"
       >
         {[
           { label: 'Book Appointment', icon: Calendar, path: '/book',            color: 'bg-primary-50 text-primary-600' },
           { label: 'My Bookings',      icon: Clock,    path: '/my-appointments', color: 'bg-blue-50 text-blue-600'     },
           { label: 'Live Queue',       icon: Zap,      path: '/live-queue',      color: 'bg-orange-50 text-orange-600' },
-          { label: 'Leave Feedback',   icon: Star,     path: '/feedback',        color: 'bg-green-50 text-green-600'   },
+          { label: 'Leave Feedback',   icon: Star,     path: '/feedback',        color: 'bg-accent-500/10 text-accent-600' },
         ].map(({ label, icon: Icon, path, color }) => (
-          <button
+          <motion.button
             key={path}
+            variants={{
+              hidden: { opacity: 0, y: 16 },
+              show: { opacity: 1, y: 0 },
+            }}
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => navigate(path)}
-            className="dash-card p-5 flex flex-col items-center gap-3 hover:shadow-lg transition-all group"
+            className="dash-card p-5 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
           >
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
               <Icon size={22} />
             </div>
             <span className="text-sm font-medium text-slate-700 text-center">{label}</span>
-          </button>
+          </motion.button>
         ))}
       </motion.div>
 
