@@ -1,26 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import VerifyEmailBanner from '../common/VerifyEmailBanner';
-import CustomCursor from '../home/CustomCursor';
-import { useLenis } from '../../hooks/useLenis';
 
-const DashboardLayout = ({ title, cinematic = false }) => {
+const DashboardLayout = ({ title }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const mainRef = useRef(null);
-
-  // Only bind Lenis when this route group opts in — it targets the actual
-  // scroll container (<main>) below, not the window, since the dashboard
-  // shell itself never scrolls.
-  useLenis(cinematic ? mainRef : undefined);
 
   return (
-    <div className={`flex h-screen overflow-hidden bg-slate-50 ${cinematic ? 'dashboard-cinematic' : ''}`}>
-      {cinematic && <CustomCursor />}
-
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((p) => !p)} />
@@ -52,7 +42,7 @@ const DashboardLayout = ({ title, cinematic = false }) => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar title={title} onMenuClick={() => setMobileOpen(true)} />
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
           <VerifyEmailBanner />
           <Outlet />
         </main>
