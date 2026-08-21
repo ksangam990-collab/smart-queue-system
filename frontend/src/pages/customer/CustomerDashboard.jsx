@@ -111,6 +111,7 @@ const CustomerDashboard = () => {
         <MagneticButton className="relative z-10" strength={0.2}>
           <button
             onClick={() => navigate('/book')}
+            data-cursor="hover"
             style={{ backgroundColor: '#ffffff', color: '#4740e8' }}
             className="hover:brightness-95 font-semibold rounded-2xl px-5 py-2.5 text-sm transition-[filter] inline-flex items-center gap-2 shadow-lg shadow-primary-900/20"
           >
@@ -184,6 +185,7 @@ const CustomerDashboard = () => {
 
           <button
             onClick={() => navigate('/live-queue')}
+            data-cursor="hover"
             className="w-full btn-secondary text-sm mt-2 flex items-center justify-center gap-2"
           >
             View Full Queue <ChevronRight size={14} />
@@ -203,6 +205,7 @@ const CustomerDashboard = () => {
             <h3 className="text-base font-semibold text-slate-800">Recent Bookings</h3>
             <button
               onClick={() => navigate('/my-appointments')}
+              data-cursor="hover"
               className="text-sm text-primary-500 hover:text-primary-600 font-medium"
             >
               View all
@@ -272,6 +275,7 @@ const CustomerDashboard = () => {
             whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => navigate(path)}
+            data-cursor="hover"
             className="dash-card p-5 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
           >
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
