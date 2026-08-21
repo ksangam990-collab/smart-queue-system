@@ -14,11 +14,11 @@ import {
   ChevronLeft,
   Clock,
   Zap,
-  X,
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import Spinner from "../../components/common/Spinner";
+import MagneticButton from "../../components/home/MagneticButton";
 
 const STEPS = ["Department", "Service", "Date & Time", "Confirm"];
 
@@ -135,27 +135,56 @@ const BookAppointment = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="dash-card p-8 text-center"
         >
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={40} className="text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          <motion.div
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+            className="relative w-20 h-20 rounded-full bg-accent-500/10 flex items-center justify-center mx-auto mb-6"
+          >
+            <span className="absolute inset-0 rounded-full border-2 border-accent-400 animate-pulse-soft" />
+            <CheckCircle size={40} className="text-accent-500" />
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="text-2xl font-bold text-slate-800 mb-2"
+          >
             Booking Confirmed!
-          </h2>
-          <p className="text-slate-500 mb-8">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-slate-500 mb-8"
+          >
             Your appointment has been booked successfully.
-          </p>
+          </motion.p>
 
           {/* Token */}
-          <div className="bg-primary-50 border-2 border-primary-200 rounded-2xl p-6 mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-primary-50 border-2 border-primary-200 rounded-2xl p-6 mb-6"
+          >
             <p className="text-sm text-slate-500 mb-2">Your Queue Token</p>
             <p className="text-5xl font-bold text-primary-600 font-mono mb-2">
               {confirmed.queueToken}
             </p>
             <p className="text-xs text-slate-400">Keep this token handy</p>
-          </div>
+          </motion.div>
 
           {/* Details */}
-          <div className="text-left space-y-3 mb-8">
+          <motion.div
+            initial="hidden"
+            animate="show"
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.05, delayChildren: 0.45 } },
+            }}
+            className="text-left space-y-3 mb-8"
+          >
             {[
               { label: "Booking Ref", value: confirmed.bookingReference },
               { label: "Department", value: confirmed.department?.name },
@@ -178,27 +207,38 @@ const BookAppointment = () => {
                 value: confirmed.fee > 0 ? `₹${confirmed.fee}` : "Free",
               },
             ].map(({ label, value }) => (
-              <div key={label} className="flex justify-between text-sm">
+              <motion.div
+                key={label}
+                variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
+                className="flex justify-between text-sm"
+              >
                 <span className="text-slate-500">{label}</span>
                 <span className="font-medium text-slate-800">{value}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="flex gap-3">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75 }}
+            className="flex gap-3"
+          >
             <button
               onClick={() => navigate("/my-appointments")}
               className="btn-secondary flex-1"
             >
               My Bookings
             </button>
-            <button
-              onClick={() => navigate("/live-queue")}
-              className="btn-primary flex-1"
-            >
-              <Zap size={16} /> Live Queue
-            </button>
-          </div>
+            <MagneticButton className="flex-1" strength={0.15}>
+              <button
+                onClick={() => navigate("/live-queue")}
+                className="btn-primary w-full"
+              >
+                <Zap size={16} /> Live Queue
+              </button>
+            </MagneticButton>
+          </motion.div>
         </motion.div>
       </div>
     );
@@ -220,17 +260,19 @@ const BookAppointment = () => {
           {STEPS.map((label, i) => (
             <div key={i} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                <motion.div
+                  animate={{ scale: i === step ? 1.1 : 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
                     i < step
-                      ? "bg-green-500 text-white"
+                      ? "bg-accent-500 text-white"
                       : i === step
-                        ? "bg-primary-500 text-white"
+                        ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
                         : "bg-slate-100 text-slate-400"
                   }`}
                 >
                   {i < step ? <CheckCircle size={16} /> : i + 1}
-                </div>
+                </motion.div>
                 <span
                   className={`text-xs mt-1 font-medium hidden sm:block ${
                     i === step ? "text-primary-600" : "text-slate-400"
@@ -240,11 +282,14 @@ const BookAppointment = () => {
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 transition-all ${
-                    i < step ? "bg-green-500" : "bg-slate-200"
-                  }`}
-                />
+                <div className="flex-1 h-0.5 mx-2 bg-slate-200 overflow-hidden rounded-full">
+                  <motion.div
+                    className="h-full bg-accent-500"
+                    initial={false}
+                    animate={{ width: i < step ? "100%" : "0%" }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
               )}
             </div>
           ))}
@@ -271,10 +316,19 @@ const BookAppointment = () => {
                   <Spinner size="lg" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <motion.div
+                  initial="hidden"
+                  animate="show"
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                >
                   {departments.map((dept) => (
-                    <button
+                    <motion.button
                       key={dept._id}
+                      variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                       onClick={() =>
                         setSelected({
                           ...selected,
@@ -283,7 +337,7 @@ const BookAppointment = () => {
                           slot: null,
                         })
                       }
-                      className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                      className={`p-4 rounded-2xl border-2 text-left transition-colors duration-200 ${
                         selected.department?._id === dept._id
                           ? "border-primary-500 bg-primary-50"
                           : "border-slate-100 hover:border-primary-200 hover:bg-slate-50"
@@ -306,9 +360,9 @@ const BookAppointment = () => {
                           </p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               )}
             </motion.div>
           )}
@@ -339,14 +393,23 @@ const BookAppointment = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <motion.div
+                  initial="hidden"
+                  animate="show"
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+                  className="space-y-3"
+                >
                   {services.map((service) => (
-                    <button
+                    <motion.button
                       key={service._id}
+                      variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.99 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                       onClick={() =>
                         setSelected({ ...selected, service, slot: null })
                       }
-                      className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
+                      className={`w-full p-4 rounded-2xl border-2 text-left transition-colors duration-200 ${
                         selected.service?._id === service._id
                           ? "border-primary-500 bg-primary-50"
                           : "border-slate-100 hover:border-primary-200 hover:bg-slate-50"
@@ -372,9 +435,9 @@ const BookAppointment = () => {
                           </p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               )}
             </motion.div>
           )}
@@ -544,30 +607,34 @@ const BookAppointment = () => {
         </button>
 
         {step < 3 ? (
-          <button
-            onClick={() => setStep(step + 1)}
-            disabled={!canNext()}
-            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next <ChevronRight size={16} />
-          </button>
+          <MagneticButton strength={0.15}>
+            <button
+              onClick={() => setStep(step + 1)}
+              disabled={!canNext()}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </MagneticButton>
         ) : (
-          <button
-            onClick={handleBook}
-            disabled={booking}
-            className="btn-primary flex items-center gap-2"
-          >
-            {booking ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Booking...
-              </>
-            ) : (
-              <>
-                <CheckCircle size={16} /> Confirm Booking
-              </>
-            )}
-          </button>
+          <MagneticButton strength={0.15}>
+            <button
+              onClick={handleBook}
+              disabled={booking}
+              className="btn-primary flex items-center gap-2"
+            >
+              {booking ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={16} /> Confirm Booking
+                </>
+              )}
+            </button>
+          </MagneticButton>
         )}
       </div>
     </div>
