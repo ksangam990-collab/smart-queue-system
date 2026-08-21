@@ -226,6 +226,7 @@ const BookAppointment = () => {
           >
             <button
               onClick={() => navigate("/my-appointments")}
+              data-cursor="hover"
               className="btn-secondary flex-1"
             >
               My Bookings
@@ -233,6 +234,7 @@ const BookAppointment = () => {
             <MagneticButton className="flex-1" strength={0.15}>
               <button
                 onClick={() => navigate("/live-queue")}
+                data-cursor="hover"
                 className="btn-primary w-full"
               >
                 <Zap size={16} /> Live Queue
@@ -600,6 +602,7 @@ const BookAppointment = () => {
           onClick={() =>
             step > 0 ? setStep(step - 1) : navigate("/dashboard")
           }
+          data-cursor="hover"
           className="btn-secondary flex items-center gap-2"
         >
           <ChevronLeft size={16} />
@@ -611,6 +614,7 @@ const BookAppointment = () => {
             <button
               onClick={() => setStep(step + 1)}
               disabled={!canNext()}
+              data-cursor="hover"
               className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next <ChevronRight size={16} />
@@ -621,6 +625,7 @@ const BookAppointment = () => {
             <button
               onClick={handleBook}
               disabled={booking}
+              data-cursor="hover"
               className="btn-primary flex items-center gap-2"
             >
               {booking ? (
