@@ -125,7 +125,7 @@ const App = () => (
 
             {/* Customer */}
             <Route element={<RoleRoute allowedRoles={["customer"]} />}>
-              <Route element={<DashboardLayout title="My Dashboard" />}>
+              <Route element={<DashboardLayout title="My Dashboard" cinematic />}>
                 <Route path="/dashboard" element={<CustomerDashboard />} />
                 <Route path="/book" element={<BookAppointment />} />
                 <Route path="/my-appointments" element={<MyAppointments />} />
