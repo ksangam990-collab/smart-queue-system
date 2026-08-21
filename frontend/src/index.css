@@ -639,3 +639,11 @@
     cursor: none;
   }
 }
+
+/* ── Customer dashboard: same custom-cursor treatment (desktop only) ── */
+@media (pointer: fine) {
+  .dashboard-cinematic,
+  .dashboard-cinematic * {
+    cursor: none;
+  }
+}
