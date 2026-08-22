@@ -97,7 +97,9 @@ const ManageAppointments = () => {
       </div>
 
       {/* Filters */}
-      <div className="dash-card p-4 flex flex-wrap gap-3">
+      <div className="dash-card overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
+        <div className="p-4 flex flex-wrap gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-48">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -155,10 +157,12 @@ const ManageAppointments = () => {
             <Filter size={14} /> Clear
           </button>
         )}
+        </div>
       </div>
 
       {/* Table */}
       <div className="dash-card overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : filtered.length === 0 ? (
@@ -201,7 +205,7 @@ const ManageAppointments = () => {
                           alt={apt.user?.name}
                           className="w-8 h-8 rounded-full object-cover"
                           onError={(e) => {
-                            e.target.src = `https://ui-avatars.com/api/?name=${apt.user?.name}&background=6366f1&color=fff&size=32`;
+                            e.target.src = `https://ui-avatars.com/api/?name=${apt.user?.name}&background=5b5ff5&color=fff&size=32`;
                           }}
                         />
                         <div>
