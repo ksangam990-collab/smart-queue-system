@@ -4,6 +4,7 @@ import { Star, MessageSquare } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
+import MagneticButton from '../../components/home/MagneticButton';
 
 const Feedback = () => {
   const [pending, setPending] = useState([]);
@@ -66,18 +67,29 @@ const Feedback = () => {
       </div>
 
       {selected ? (
-        <div className="dash-card p-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+          className="dash-card p-6"
+        >
           <h3 className="font-semibold text-slate-800 mb-1">{selected.service?.name}</h3>
           <p className="text-sm text-slate-500 mb-6">{selected.department?.name}</p>
 
           <div className="flex gap-2 justify-center mb-6">
             {[1,2,3,4,5].map((star) => (
-              <button key={star} onClick={() => setRating(star)}>
+              <motion.button
+                key={star}
+                onClick={() => setRating(star)}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              >
                 <Star
                   size={36}
                   className={star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}
                 />
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -93,34 +105,44 @@ const Feedback = () => {
             <button onClick={() => { setSelected(null); setRating(0); setComment(''); }} className="btn-secondary flex-1">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1">
-              {submitting ? 'Submitting...' : 'Submit Feedback'}
-            </button>
+            <MagneticButton className="flex-1" strength={0.15}>
+              <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full">
+                {submitting ? 'Submitting...' : 'Submit Feedback'}
+              </button>
+            </MagneticButton>
           </div>
-        </div>
+        </motion.div>
       ) : (
         <>
           {pending.length > 0 && (
             <div>
               <h3 className="font-semibold text-slate-700 mb-3 text-sm">Pending Feedback</h3>
-              <div className="space-y-3">
+              <motion.div
+                initial="hidden"
+                animate="show"
+                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+                className="space-y-3"
+              >
                 {pending.map((apt) => (
                   <motion.div
                     key={apt._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="dash-card p-4 flex items-center justify-between"
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="dash-card p-4 flex items-center justify-between hover:shadow-lg transition-shadow duration-300"
                   >
                     <div>
                       <p className="font-medium text-slate-800 text-sm">{apt.service?.name}</p>
                       <p className="text-xs text-slate-500">{apt.department?.name}</p>
                     </div>
-                    <button onClick={() => setSelected(apt)} className="btn-primary text-sm py-2">
-                      Rate Now
-                    </button>
+                    <MagneticButton strength={0.15}>
+                      <button onClick={() => setSelected(apt)} className="btn-primary text-sm py-2">
+                        Rate Now
+                      </button>
+                    </MagneticButton>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           )}
 
@@ -132,9 +154,18 @@ const Feedback = () => {
                 No reviews submitted yet
               </div>
             ) : (
-              <div className="space-y-3">
+              <motion.div
+                initial="hidden"
+                animate="show"
+                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+                className="space-y-3"
+              >
                 {given.map((f) => (
-                  <div key={f._id} className="dash-card p-4">
+                  <motion.div
+                    key={f._id}
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                    className="dash-card p-4"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-slate-800 text-sm">{f.service?.name}</p>
                       <div className="flex gap-0.5">
@@ -144,9 +175,9 @@ const Feedback = () => {
                       </div>
                     </div>
                     {f.comment && <p className="text-sm text-slate-500">{f.comment}</p>}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         </>
