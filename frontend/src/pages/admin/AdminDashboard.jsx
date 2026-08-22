@@ -8,7 +8,6 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Clock,
   Building2,
   TrendingUp,
   Zap,
@@ -202,8 +201,10 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="dash-card p-6"
+          className="dash-card overflow-hidden"
         >
+          <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
+          <div className="p-6">
           <h3 className="text-base font-semibold text-slate-800 mb-1">
             Weekly Bookings
           </h3>
@@ -234,18 +235,19 @@ const AdminDashboard = () => {
               <Legend />
               <Bar
                 dataKey="bookings"
-                fill="#6366f1"
+                fill="#5b5ff5"
                 radius={[4, 4, 0, 0]}
                 name="Bookings"
               />
               <Bar
                 dataKey="completed"
-                fill="#10b981"
+                fill="#0fb894"
                 radius={[4, 4, 0, 0]}
                 name="Completed"
               />
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </motion.div>
 
         {/* Line chart */}
@@ -253,8 +255,10 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="dash-card p-6"
+          className="dash-card overflow-hidden"
         >
+          <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
+          <div className="p-6">
           <h3 className="text-base font-semibold text-slate-800 mb-1">
             User Growth
           </h3>
@@ -285,13 +289,14 @@ const AdminDashboard = () => {
               <Line
                 type="monotone"
                 dataKey="users"
-                stroke="#6366f1"
+                stroke="#5b5ff5"
                 strokeWidth={2.5}
-                dot={{ fill: "#6366f1", strokeWidth: 2, r: 4 }}
+                dot={{ fill: "#5b5ff5", strokeWidth: 2, r: 4 }}
                 name="Users"
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </motion.div>
       </div>
 
@@ -302,6 +307,7 @@ const AdminDashboard = () => {
         transition={{ delay: 0.5 }}
         className="dash-card overflow-hidden"
       >
+        <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-slate-800">
