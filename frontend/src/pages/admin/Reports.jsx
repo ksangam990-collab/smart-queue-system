@@ -3,20 +3,20 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie,
+  BarChart, Bar, PieChart, Pie,
   Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts';
 import {
   Download, TrendingUp, Users,
-  Calendar, CheckCircle,
+  Calendar,
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
 import StatsCard from '../../components/common/StatsCard';
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#5b5ff5', '#0fb894', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const Reports = () => {
   const [stats, setStats]     = useState(null);
@@ -115,8 +115,8 @@ const Reports = () => {
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
               <Legend />
-              <Bar dataKey="bookings"  fill="#6366f1" radius={[4,4,0,0]} name="Bookings"  />
-              <Bar dataKey="completed" fill="#10b981" radius={[4,4,0,0]} name="Completed" />
+              <Bar dataKey="bookings"  fill="#5b5ff5" radius={[4,4,0,0]} name="Bookings"  />
+              <Bar dataKey="completed" fill="#0fb894" radius={[4,4,0,0]} name="Completed" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -167,6 +167,7 @@ const Reports = () => {
         transition={{ delay: 0.4 }}
         className="dash-card overflow-hidden"
       >
+        <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
         <div className="px-6 py-4 border-b border-slate-100">
           <h3 className="text-base font-semibold text-slate-800">Summary</h3>
         </div>
