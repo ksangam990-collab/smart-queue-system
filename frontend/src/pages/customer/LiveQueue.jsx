@@ -184,34 +184,34 @@ const LiveQueue = () => {
 
                   {/* Queue stats */}
                   {queue ? (
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
 
                       {/* Current token */}
-                      <div className="bg-slate-50 rounded-2xl p-4 text-center">
-                        <p className="text-xs text-slate-500 mb-1">Now Serving</p>
-                        <p className="text-xl font-bold text-slate-800 font-mono">
+                      <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 text-center">
+                        <p className="text-[11px] sm:text-xs text-slate-500 mb-1">Now Serving</p>
+                        <p className="text-lg sm:text-xl font-bold text-slate-800 font-mono">
                           {queue.currentToken || '—'}
                         </p>
                       </div>
 
                       {/* Position */}
-                      <div className="bg-primary-50 rounded-2xl p-4 text-center border border-primary-100">
-                        <p className="text-xs text-primary-600 mb-1">Your Position</p>
+                      <div className="bg-primary-50 rounded-2xl p-3 sm:p-4 text-center border border-primary-100">
+                        <p className="text-[11px] sm:text-xs text-primary-600 mb-1">Your Position</p>
                         <motion.p
                           key={queue.position}
                           initial={{ scale: 0.85, opacity: 0.6 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                          className="text-2xl font-bold text-primary-600"
+                          className="text-xl sm:text-2xl font-bold text-primary-600"
                         >
                           #{queue.position || '—'}
                         </motion.p>
                       </div>
 
                       {/* Wait time */}
-                      <div className="bg-slate-50 rounded-2xl p-4 text-center">
-                        <p className="text-xs text-slate-500 mb-1">Est. Wait</p>
-                        <p className="text-xl font-bold text-slate-800">
+                      <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 text-center">
+                        <p className="text-[11px] sm:text-xs text-slate-500 mb-1">Est. Wait</p>
+                        <p className="text-lg sm:text-xl font-bold text-slate-800">
                           {queue.estimatedWait > 0
                             ? `${queue.estimatedWait}m`
                             : '—'
