@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Clock, Users, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Zap, Clock, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
-import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
+import MagneticButton from '../../components/home/MagneticButton';
 
 const LiveQueue = () => {
   const [appointments, setAppointments] = useState([]);
@@ -89,14 +89,16 @@ const LiveQueue = () => {
             Track your real-time queue position
           </p>
         </div>
-        <button
-          onClick={() => loadAll(true)}
-          disabled={refreshing}
-          className="btn-secondary flex items-center gap-2 text-sm"
-        >
-          <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        <MagneticButton strength={0.15}>
+          <button
+            onClick={() => loadAll(true)}
+            disabled={refreshing}
+            className="btn-secondary flex items-center gap-2 text-sm"
+          >
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </MagneticButton>
       </div>
 
       {/* Last updated */}
@@ -118,13 +120,15 @@ const LiveQueue = () => {
           <p className="text-slate-400 text-sm mb-6">
             You have no confirmed appointments today to track.
           </p>
-          <a href="/book" className="btn-primary inline-flex">
-            Book Appointment
-          </a>
+          <MagneticButton className="inline-block" strength={0.15}>
+            <a href="/book" className="btn-primary inline-flex">
+              Book Appointment
+            </a>
+          </MagneticButton>
         </div>
       ) : (
         <div className="space-y-5">
-          {appointments.map((apt) => {
+          {appointments.map((apt, idx) => {
             const queue   = queueData[apt._id];
             const status  = queue?.status || 'waiting';
             const message = getStatusMessage(status);
@@ -134,11 +138,16 @@ const LiveQueue = () => {
                 key={apt._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="dash-card overflow-hidden"
               >
                 {/* Alert message */}
                 {message && (
-                  <div className={`px-6 py-3 border-b text-sm font-medium flex items-center gap-2 ${getStatusColor(status)}`}>
+                  <div
+                    className={`relative px-6 py-3 border-b text-sm font-medium flex items-center gap-2 ${getStatusColor(status)} ${
+                      status === 'called' ? 'animate-pulse-soft' : ''
+                    }`}
+                  >
                     {status === 'called'
                       ? <AlertCircle size={16} />
                       : <CheckCircle size={16} />
@@ -188,9 +197,15 @@ const LiveQueue = () => {
                       {/* Position */}
                       <div className="bg-primary-50 rounded-2xl p-4 text-center border border-primary-100">
                         <p className="text-xs text-primary-600 mb-1">Your Position</p>
-                        <p className="text-2xl font-bold text-primary-600">
+                        <motion.p
+                          key={queue.position}
+                          initial={{ scale: 0.85, opacity: 0.6 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          className="text-2xl font-bold text-primary-600"
+                        >
                           #{queue.position || '—'}
-                        </p>
+                        </motion.p>
                       </div>
 
                       {/* Wait time */}
@@ -224,7 +239,7 @@ const LiveQueue = () => {
                             width: `${Math.max(5, 100 - ((queue.position - 1) / Math.max(queue.position, 1)) * 100)}%`
                           }}
                           transition={{ duration: 1, ease: 'easeOut' }}
-                          className="h-full bg-primary-500 rounded-full"
+                          className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-500"
                         />
                       </div>
                     </div>
