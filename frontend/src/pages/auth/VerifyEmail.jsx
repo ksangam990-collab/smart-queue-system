@@ -38,8 +38,8 @@ const VerifyEmail = () => {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="auth-card-glass relative z-10 text-center"
       >
-        <div className="w-14 h-14 rounded-2xl bg-primary-500 flex items-center justify-center mx-auto mb-4">
-          <Logo size={56} className="text-white" />
+        <div className="flex justify-center mb-4">
+          <Logo size={56} />
         </div>
 
         <AnimatePresence mode="wait">
