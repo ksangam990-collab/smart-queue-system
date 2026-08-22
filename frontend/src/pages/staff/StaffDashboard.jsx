@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/common/StatsCard';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import MagneticButton from '../../components/home/MagneticButton';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -88,12 +89,14 @@ const StaffDashboard = () => {
           <p className="font-semibold text-slate-800 mb-1">
             {appointments.find((a) => ['pending','confirmed'].includes(a.status))?.user?.name || 'No patients'}
           </p>
-          <button
-            onClick={() => navigate('/staff/queue')}
-            className="btn-primary w-full mt-4"
-          >
-            Open Queue Panel
-          </button>
+          <MagneticButton className="w-full mt-4" strength={0.15}>
+            <button
+              onClick={() => navigate('/staff/queue')}
+              className="btn-primary w-full"
+            >
+              Open Queue Panel
+            </button>
+          </MagneticButton>
         </motion.div>
 
         {/* Today's schedule */}
@@ -103,6 +106,7 @@ const StaffDashboard = () => {
           transition={{ delay: 0.3 }}
           className="dash-card overflow-hidden lg:col-span-2"
         >
+          <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
           <div className="px-6 py-4 border-b border-slate-100">
             <h3 className="text-base font-semibold text-slate-800">Today's Schedule</h3>
           </div>
