@@ -44,8 +44,8 @@ const ForgotPassword = () => {
         {!submitted ? (
           <>
             <div className="text-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-primary-500 flex items-center justify-center mx-auto mb-4">
-                <Logo size={56} className="text-white" />
+              <div className="flex justify-center mb-4">
+                <Logo size={56} />
               </div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Forgot password?
