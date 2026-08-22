@@ -8,6 +8,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import MagneticButton from '../../components/home/MagneticButton';
 import QRCode from 'react-qr-code';
 
 const statusVariant = {
@@ -71,30 +72,39 @@ const MyAppointments = () => {
             View and manage all your bookings
           </p>
         </div>
-        <button
-          onClick={() => navigate('/book')}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Calendar size={16} /> Book New
-        </button>
+        <MagneticButton strength={0.15}>
+          <button
+            onClick={() => navigate('/book')}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Calendar size={16} /> Book New
+          </button>
+        </MagneticButton>
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+        className="flex gap-2 flex-wrap"
+      >
         {STATUS_FILTERS.map((s) => (
-          <button
+          <motion.button
             key={s}
+            variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-colors duration-200 ${
               statusFilter === s
-                ? 'bg-primary-500 text-white'
+                ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-primary-300'
             }`}
           >
             {s}
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Appointments list */}
       {loading ? (
@@ -108,9 +118,11 @@ const MyAppointments = () => {
               ? "You haven't booked any appointments yet"
               : `No ${statusFilter} appointments`}
           </p>
-          <button onClick={() => navigate('/book')} className="btn-primary">
-            Book Appointment
-          </button>
+          <MagneticButton strength={0.15}>
+            <button onClick={() => navigate('/book')} className="btn-primary">
+              Book Appointment
+            </button>
+          </MagneticButton>
         </div>
       ) : (
         <div className="space-y-4">
@@ -119,8 +131,9 @@ const MyAppointments = () => {
               key={apt._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="dash-card p-5"
+              whileHover={{ y: -3 }}
+              transition={{ delay: i * 0.05, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="dash-card p-5 hover:shadow-lg transition-shadow duration-300"
             >
               <div className="flex items-start justify-between gap-4">
                 {/* Left */}
@@ -198,10 +211,15 @@ const MyAppointments = () => {
 
       {/* Cancel confirmation modal */}
       {cancelId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.92, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center"
           >
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
@@ -231,18 +249,21 @@ const MyAppointments = () => {
               </button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
 
       {/* QR Code modal */}
       {showQR && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowQR(null)}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.92, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             className="bg-white rounded-3xl p-8 text-center max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
@@ -262,7 +283,7 @@ const MyAppointments = () => {
               Close
             </button>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
