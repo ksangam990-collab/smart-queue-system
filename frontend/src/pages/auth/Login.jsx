@@ -200,31 +200,19 @@ const Login = () => {
               </MagneticButton>
             </form>
 
-            {/* Demo credentials */}
-            <div className="mt-8 p-4 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2.5">
-                Demo credentials
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+                <a href="/terms" className="hover:text-primary-500 transition-colors">
+                  Terms
+                </a>
+                <span className="mx-2">·</span>
+                <a href="/privacy" className="hover:text-primary-500 transition-colors">
+                  Privacy
+                </a>
+                <span className="mx-2">·</span>
+                © {new Date().getFullYear()} Slotly
               </p>
-              <div className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                <div className="flex justify-between">
-                  <span>Admin</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">
-                    admin@slotly.com / admin123
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Staff</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">
-                    staff@slotly.com / staff123
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Customer</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">
-                    user@slotly.com / user123
-                  </span>
-                </div>
-              </div>
             </div>
           </motion.div>
         </div>
