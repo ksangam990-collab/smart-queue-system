@@ -148,7 +148,7 @@ const ManageStaff = () => {
                     alt={member.name}
                     className="w-12 h-12 rounded-2xl object-cover"
                     onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${member.name}&background=6366f1&color=fff&size=48`;
+                      e.target.src = `https://ui-avatars.com/api/?name=${member.name}&background=5b5ff5&color=fff&size=48`;
                     }}
                   />
                   <div>
