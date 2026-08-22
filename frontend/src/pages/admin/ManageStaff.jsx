@@ -202,9 +202,9 @@ const ManageStaff = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-3xl">
                 <h2 className="text-lg font-bold text-slate-800">Add Staff Member</h2>
                 <button
                   onClick={() => setShowModal(false)}
