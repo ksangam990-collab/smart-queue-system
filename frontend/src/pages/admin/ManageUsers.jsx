@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Users, ToggleLeft,
-  ToggleRight, Trash2, X, Shield,
+  ToggleRight, Trash2, Shield,
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -110,6 +110,7 @@ const ManageUsers = () => {
 
       {/* Table */}
       <div className="dash-card overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : users.length === 0 ? (
@@ -147,7 +148,7 @@ const ManageUsers = () => {
                             alt={user.name}
                             className="w-9 h-9 rounded-full object-cover"
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=6366f1&color=fff&size=36`;
+                              e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=5b5ff5&color=fff&size=36`;
                             }}
                           />
                           <div>
