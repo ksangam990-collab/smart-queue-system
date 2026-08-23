@@ -124,6 +124,9 @@ const Login = () => {
             className="auth-card-glass w-full max-w-sm"
           >
             <div className="mb-8 text-center">
+              <div className="flex justify-center mb-5">
+                <Logo size={44} />
+              </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1.5">
                 Welcome back
               </h2>
