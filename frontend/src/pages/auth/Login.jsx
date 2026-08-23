@@ -52,7 +52,7 @@ const Login = () => {
         <CustomCursor />
 
         {/* ── Nav ──────────────────────────────────────────────── */}
-        <nav className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/70 dark:border-white/[0.06]">
+        <nav className="lg:hidden sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/70 dark:border-white/[0.06]">
           <div className="flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
             <Link to="/" data-cursor="hover" className="flex items-center gap-2.5">
               <Logo size={34} />
