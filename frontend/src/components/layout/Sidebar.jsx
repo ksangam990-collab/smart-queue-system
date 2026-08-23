@@ -35,7 +35,7 @@ const customerLinks = [
   { to: '/feedback',        icon: Star,            label: 'Feedback'     },
 ];
 
-const Sidebar = ({ collapsed, onToggle }) => {
+const Sidebar = ({ collapsed, onToggle, onNavigate }) => {
   const { user } = useAuth();
 
   const links =
@@ -69,6 +69,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           <NavLink
             key={to}
             to={to}
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm
                ${isActive
