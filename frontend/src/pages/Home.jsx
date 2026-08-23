@@ -208,22 +208,22 @@ const Home = () => {
             style={{ opacity: navBgOpacity }}
             className="absolute inset-0 backdrop-blur-xl bg-white/80 dark:bg-[#05050b]/75 border-b border-slate-200/70 dark:border-white/[0.06]"
           />
-          <div className="relative flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
-            <div className="flex items-center gap-2.5">
-              <Logo size={34} />
-              <div className="flex flex-col leading-none">
-                <span className="font-bold text-lg tracking-tight">Slotly</span>
-                <span className="text-[10px] font-medium text-slate-400 dark:text-white/35 tracking-widest uppercase">
+          <div className="relative flex items-center justify-between px-4 sm:px-10 py-3 sm:py-4 max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <Logo size={32} />
+              <div className="flex flex-col leading-none min-w-0">
+                <span className="font-bold text-base sm:text-lg tracking-tight">Slotly</span>
+                <span className="hidden sm:block text-[10px] font-medium text-slate-400 dark:text-white/35 tracking-widest uppercase">
                   Smart Queue Booking
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <button
                 data-cursor="hover"
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
-                className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors overflow-hidden"
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors overflow-hidden flex-shrink-0"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
@@ -234,7 +234,7 @@ const Home = () => {
                     transition={{ duration: 0.25 }}
                     className="flex"
                   >
-                    {isDark ? <Moon size={17} /> : <Sun size={17} />}
+                    {isDark ? <Moon size={16} /> : <Sun size={16} />}
                   </motion.span>
                 </AnimatePresence>
               </button>
@@ -249,7 +249,7 @@ const Home = () => {
                 <Link
                   to="/register"
                   data-cursor="hover"
-                  className="btn-primary text-sm"
+                  className="btn-primary text-xs sm:text-sm px-3.5 py-2 sm:px-5 sm:py-2.5 whitespace-nowrap flex-shrink-0"
                 >
                   Get started
                 </Link>
@@ -262,7 +262,7 @@ const Home = () => {
         <section
           ref={heroRef}
           onMouseMove={handleHeroMouseMove}
-          className="relative px-6 sm:px-10 pt-16 pb-16 sm:pt-20 sm:pb-24 max-w-7xl mx-auto"
+          className="relative px-5 sm:px-10 pt-10 pb-12 sm:pt-20 sm:pb-24 max-w-7xl mx-auto"
         >
           <Spotlight
             mouseX={mouseX}
@@ -290,7 +290,7 @@ const Home = () => {
                 initial="hidden"
                 animate="visible"
                 variants={headingContainer}
-                className="text-[2.75rem] leading-[1.05] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight mb-6"
+                className="text-[2rem] leading-[1.15] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight mb-5 sm:mb-6"
               >
                 <span className="block overflow-hidden pb-1">
                   {["Your", "queue,"].map((word, i) => (
@@ -321,7 +321,7 @@ const Home = () => {
                 animate="visible"
                 variants={blurReveal}
                 transition={{ ...blurReveal.visible.transition, delay: 0.28 }}
-                className="text-lg text-slate-500 dark:text-white/50 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0"
+                className="text-base sm:text-lg text-slate-500 dark:text-white/50 leading-relaxed mb-8 sm:mb-10 max-w-lg mx-auto lg:mx-0"
               >
                 Slotly turns any waiting room into a departure board. Book a
                 slot, get a token, and watch your exact position count down —
