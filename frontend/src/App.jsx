@@ -1,5 +1,6 @@
 // frontend/src/App.jsx
 
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -40,19 +41,34 @@ import LiveQueue from "./pages/customer/LiveQueue";
 import FeedbackPage from "./pages/customer/Feedback";
 import Notifications from "./pages/customer/Notifications";
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return isMobile;
+};
+
 const ThemedToaster = () => {
   const { isDark } = useTheme();
+  const isMobile = useIsMobile();
   return (
     <Toaster
-      position="top-right"
+      position={isMobile ? "top-center" : "bottom-right"}
+      containerStyle={isMobile ? { top: 12, left: 12, right: 12 } : undefined}
       toastOptions={{
         duration: 3500,
         style: {
-          borderRadius: "16px",
+          borderRadius: isMobile ? "12px" : "16px",
           fontFamily: "Inter, sans-serif",
-          fontSize: "14px",
+          fontSize: isMobile ? "13px" : "14px",
           fontWeight: 500,
-          padding: "14px 18px",
+          padding: isMobile ? "10px 14px" : "14px 18px",
+          maxWidth: isMobile ? "calc(100vw - 24px)" : "380px",
           background: isDark ? "#1a1a2e" : "#ffffff",
           color: isDark ? "#e2e8f0" : "#1e293b",
           border: isDark ? "1px solid #2a2a42" : "1px solid #e2e8f0",
