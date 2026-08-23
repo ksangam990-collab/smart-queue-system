@@ -58,16 +58,16 @@ const ThemedToaster = () => {
   const isMobile = useIsMobile();
   return (
     <Toaster
-      position={isMobile ? "top-center" : "bottom-right"}
-      containerStyle={isMobile ? { top: 76, left: 12, right: 12 } : undefined}
+      position={isMobile ? "bottom-center" : "bottom-right"}
+      containerStyle={isMobile ? { bottom: 20, left: 12, right: 12 } : undefined}
       toastOptions={{
         duration: 3500,
         style: {
-          borderRadius: isMobile ? "12px" : "16px",
+          borderRadius: isMobile ? "10px" : "16px",
           fontFamily: "Inter, sans-serif",
-          fontSize: isMobile ? "13px" : "14px",
+          fontSize: isMobile ? "12px" : "14px",
           fontWeight: 500,
-          padding: isMobile ? "10px 14px" : "14px 18px",
+          padding: isMobile ? "8px 12px" : "14px 18px",
           maxWidth: isMobile ? "calc(100vw - 24px)" : "380px",
           background: isDark ? "#1a1a2e" : "#ffffff",
           color: isDark ? "#e2e8f0" : "#1e293b",
