@@ -339,7 +339,7 @@ const Home = () => {
                   <Link
                     to="/register"
                     data-cursor="hover"
-                    className="btn-primary px-7 py-3.5 text-[15px] w-full sm:w-auto group"
+                    className="btn-primary px-6 py-3 text-sm sm:px-7 sm:py-3.5 sm:text-[15px] w-full sm:w-auto group"
                   >
                     Book your first appointment
                     <ArrowRight
@@ -351,7 +351,7 @@ const Home = () => {
                 <Link
                   to="/login"
                   data-cursor="hover"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] w-full sm:w-auto rounded-2xl font-semibold border border-slate-200 dark:border-white/15 text-slate-700 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/25 transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm sm:px-7 sm:py-3.5 sm:text-[15px] w-full sm:w-auto rounded-2xl font-semibold border border-slate-200 dark:border-white/15 text-slate-700 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/25 transition-all"
                 >
                   I already have an account
                 </Link>
@@ -362,18 +362,18 @@ const Home = () => {
                 animate="visible"
                 variants={blurReveal}
                 transition={{ ...blurReveal.visible.transition, delay: 0.44 }}
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 mt-7 text-xs text-slate-400 dark:text-white/35"
+                className="flex flex-col sm:flex-row items-center sm:justify-center lg:justify-start gap-2 sm:gap-x-5 sm:gap-y-2 mt-6 sm:mt-7 text-xs text-slate-400 dark:text-white/35"
               >
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
                   Free to use
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
                   No installation
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400" />
+                  <CheckCircle2 size={14} className="text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
                   Works on any device
                 </span>
               </motion.div>
