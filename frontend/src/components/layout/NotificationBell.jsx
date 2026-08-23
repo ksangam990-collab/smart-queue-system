@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -67,7 +67,7 @@ const NotificationBell = () => {
             initial={{ opacity: 0, y: -8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
-            className="absolute right-0 top-12 w-80 bg-white dark:bg-[#1a1a2e] border border-slate-100 dark:border-[#2a2a42] rounded-2xl shadow-card z-50 max-h-96 overflow-hidden flex flex-col"
+            className="fixed left-4 right-4 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80 bg-white dark:bg-[#1a1a2e] border border-slate-100 dark:border-[#2a2a42] rounded-2xl shadow-card z-50 max-h-96 overflow-hidden flex flex-col"
           >
             <div className="p-4 border-b border-slate-100 dark:border-[#2a2a42] flex items-center justify-between">
               <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Notifications</h3>
