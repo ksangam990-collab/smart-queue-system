@@ -90,7 +90,7 @@ const ManageStaff = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Staff</h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -99,7 +99,7 @@ const ManageStaff = () => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Plus size={16} /> Add Staff
         </button>
