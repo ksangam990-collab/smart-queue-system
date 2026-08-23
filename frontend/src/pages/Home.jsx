@@ -293,7 +293,7 @@ const Home = () => {
                 className="text-[2rem] leading-[1.15] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight mb-5 sm:mb-6"
               >
                 <span className="block overflow-hidden pb-1">
-                  {["Your", "queue,"].map((word, i) => (
+                  {["Your", "Queue"].map((word, i) => (
                     <motion.span
                       key={i}
                       variants={wordReveal}
@@ -304,7 +304,7 @@ const Home = () => {
                   ))}
                 </span>
                 <span className="block overflow-hidden pb-1 bg-gradient-to-r from-primary-600 via-primary-500 to-emerald-500 dark:from-primary-300 dark:via-primary-400 dark:to-emerald-300 bg-clip-text text-transparent">
-                  {["live", "on", "screen."].map((word, i) => (
+                  {["Live", "On", "Screen."].map((word, i) => (
                     <motion.span
                       key={i}
                       variants={wordReveal}
@@ -324,7 +324,7 @@ const Home = () => {
                 className="text-base sm:text-lg text-slate-500 dark:text-white/50 leading-relaxed mb-8 sm:mb-10 max-w-lg mx-auto lg:mx-0"
               >
                 Slotly turns any waiting room into a departure board. Book a
-                slot, get a token, and watch your exact position count down —
+                slot, get a token, and watch your exact position count down 
                 no more sitting around guessing.
               </motion.p>
 
@@ -343,7 +343,7 @@ const Home = () => {
                   >
                     Book your first appointment
                     <ArrowRight
-                      size={16}
+                      size={14}
                       className="transition-transform group-hover:translate-x-0.5"
                     />
                   </Link>
@@ -653,7 +653,7 @@ const Home = () => {
                     </a>
                   </li>
                   <li className="text-slate-500 dark:text-white/40">
-                    Developed by :- Sangam Kumar
+                    Developed by : Sangam Kumar
                   </li>
                 </ul>
               </div>
