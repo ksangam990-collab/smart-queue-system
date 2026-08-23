@@ -6,11 +6,11 @@ import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../components/common/Logo";
 import AuthBrandPanel from "../../components/auth/AuthBrandPanel";
-import AuthThemeToggle from "../../components/auth/AuthThemeToggle";
 import CustomCursor from "../../components/home/CustomCursor";
 import MagneticButton from "../../components/home/MagneticButton";
 import { useLenis } from "../../hooks/useLenis";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft, Sun, Moon } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
 const ROLE_HOME = {
@@ -22,6 +22,7 @@ const ROLE_HOME = {
 const Login = () => {
   useLenis();
   const { login, loading } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,11 +47,57 @@ const Login = () => {
         animate={{ opacity: 1, filter: "blur(0px)" }}
         exit={{ opacity: 0, filter: "blur(8px)" }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="auth-cinematic min-h-screen flex bg-white dark:bg-slate-950"
+        className="auth-cinematic min-h-screen flex flex-col bg-white dark:bg-slate-950"
       >
         <CustomCursor />
 
+        {/* ── Nav ──────────────────────────────────────────────── */}
+        <nav className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/70 dark:border-white/[0.06]">
+          <div className="flex items-center justify-between px-6 sm:px-10 py-4 max-w-7xl mx-auto">
+            <Link to="/" data-cursor="hover" className="flex items-center gap-2.5">
+              <Logo size={34} />
+              <div className="flex flex-col leading-none">
+                <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
+                  Slotly
+                </span>
+                <span className="text-[10px] font-medium text-slate-400 dark:text-white/35 tracking-widest uppercase">
+                  Smart Queue Booking
+                </span>
+              </div>
+            </Link>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                data-cursor="hover"
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors overflow-hidden"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={isDark ? "moon" : "sun"}
+                    initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                    animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex"
+                  >
+                    {isDark ? <Moon size={17} /> : <Sun size={17} />}
+                  </motion.span>
+                </AnimatePresence>
+              </button>
+              <Link
+                to="/"
+                data-cursor="hover"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+              >
+                <ArrowLeft size={15} /> Back to home
+              </Link>
+            </div>
+          </div>
+        </nav>
+
         {/* ── Left panel: branding ─────────────────────────────────── */}
+        <div className="flex-1 flex">
         <AuthBrandPanel
           eyebrow="Welcome back"
           title={
@@ -70,24 +117,12 @@ const Login = () => {
 
         {/* ── Right panel: form ────────────────────────────────────── */}
         <div className="relative flex-1 flex items-center justify-center px-6 py-12 sm:px-12">
-          <AuthThemeToggle />
-
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="auth-card-glass w-full max-w-sm"
           >
-            {/* Mobile logo */}
-            <div className="lg:hidden flex justify-center mb-10">
-              <div className="flex items-center gap-3">
-                <Logo size={56} />
-                <span className="font-bold text-3xl text-slate-900 dark:text-white tracking-tight">
-                  Slotly
-                </span>
-              </div>
-            </div>
-
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1.5">
                 Welcome back
@@ -215,6 +250,7 @@ const Login = () => {
               </p>
             </div>
           </motion.div>
+        </div>
         </div>
       </motion.div>
     </AnimatePresence>
