@@ -137,6 +137,9 @@ const Register = () => {
             className="auth-card-glass"
           >
             <div className="text-center mb-8">
+              <div className="flex justify-center mb-5">
+                <Logo size={44} />
+              </div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Create account
               </h1>
