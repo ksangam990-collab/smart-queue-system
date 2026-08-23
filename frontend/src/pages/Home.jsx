@@ -343,7 +343,7 @@ const Home = () => {
                   >
                     Book your first appointment
                     <ArrowRight
-                      size={14}
+                      size={16}
                       className="transition-transform group-hover:translate-x-0.5"
                     />
                   </Link>
