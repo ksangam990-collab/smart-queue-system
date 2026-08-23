@@ -34,7 +34,7 @@ const DashboardLayout = ({ title }) => {
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="fixed left-0 top-0 h-full z-50 lg:hidden"
             >
-              <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+              <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} />
             </motion.div>
           </>
         )}
