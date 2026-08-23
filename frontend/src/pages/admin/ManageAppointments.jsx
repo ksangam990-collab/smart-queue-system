@@ -81,7 +81,7 @@ const ManageAppointments = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Appointments</h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -90,7 +90,7 @@ const ManageAppointments = () => {
         </div>
         <button
           onClick={fetchAppointments}
-          className="btn-secondary flex items-center gap-2"
+          className="btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <RefreshCw size={16} /> Refresh
         </button>
