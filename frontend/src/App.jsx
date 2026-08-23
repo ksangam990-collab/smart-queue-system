@@ -59,7 +59,7 @@ const ThemedToaster = () => {
   return (
     <Toaster
       position={isMobile ? "top-center" : "bottom-right"}
-      containerStyle={isMobile ? { top: 12, left: 12, right: 12 } : undefined}
+      containerStyle={isMobile ? { top: 76, left: 12, right: 12 } : undefined}
       toastOptions={{
         duration: 3500,
         style: {
