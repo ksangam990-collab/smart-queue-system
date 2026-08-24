@@ -218,14 +218,14 @@ const CustomerDashboard = () => {
               </div>
             ) : (
               recentBookings.map((booking) => (
-                <div key={booking._id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                <div key={booking._id} className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
                       <Calendar size={18} className="text-primary-500" />
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800 text-sm">{booking.service?.name}</p>
-                      <p className="text-xs text-slate-500">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800 text-sm truncate">{booking.service?.name}</p>
+                      <p className="text-xs text-slate-500 truncate">
                         {booking.department?.name} ·{' '}
                         {new Date(booking.date).toLocaleDateString('en-IN', {
                           month: 'short', day: 'numeric', year: 'numeric',
@@ -234,7 +234,7 @@ const CustomerDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 flex-shrink-0">
                     <span className="font-mono text-xs font-semibold text-primary-600 bg-primary-50 px-2 py-1 rounded-lg">
                       {booking.queueToken}
                     </span>
