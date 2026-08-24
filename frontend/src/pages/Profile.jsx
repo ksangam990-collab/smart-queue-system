@@ -77,7 +77,7 @@ const Profile = () => {
         </h3>
 
         {/* Avatar upload */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-4 mb-6">
           <img
             src={user?.avatar?.url}
             alt={user?.name}
