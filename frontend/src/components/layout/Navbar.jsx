@@ -95,7 +95,7 @@ const Navbar = ({ title = "Dashboard", onMenuClick }) => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-12 w-48 bg-white border border-slate-100 rounded-2xl shadow-card py-2 z-50"
+                className="absolute right-0 top-12 w-48 max-w-[calc(100vw-1rem)] bg-white border border-slate-100 rounded-2xl shadow-card py-2 z-50"
               >
                 <button
                   onClick={() => {
