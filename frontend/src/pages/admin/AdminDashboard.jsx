@@ -112,7 +112,7 @@ const AdminDashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
             Here's what's happening at Slotly today.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-primary-50 text-primary-600 px-4 py-2 rounded-xl text-sm font-medium">
+        <div className="flex items-center gap-2 bg-primary-50 text-primary-600 px-4 py-2 rounded-xl text-sm font-medium w-fit">
           <Zap size={16} />
           Live Dashboard
         </div>
