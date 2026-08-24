@@ -99,9 +99,9 @@ const ManageAppointments = () => {
       {/* Filters */}
       <div className="dash-card overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
-        <div className="p-4 flex flex-wrap gap-3">
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
         {/* Search */}
-        <div className="relative flex-1 min-w-48">
+        <div className="relative sm:col-span-2 lg:flex-1 lg:min-w-48">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -116,7 +116,7 @@ const ManageAppointments = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="form-input w-auto"
+          className="form-input w-full lg:w-auto"
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>{s === 'all' ? 'All Status' : s}</option>
@@ -127,7 +127,7 @@ const ManageAppointments = () => {
         <select
           value={deptFilter}
           onChange={(e) => setDeptFilter(e.target.value)}
-          className="form-input w-auto"
+          className="form-input w-full lg:w-auto"
         >
           <option value="">All Departments</option>
           {departments.map((d) => (
@@ -140,7 +140,7 @@ const ManageAppointments = () => {
           type="date"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="form-input w-auto"
+          className="form-input w-full lg:w-auto"
         />
 
         {/* Clear filters */}
@@ -152,7 +152,7 @@ const ManageAppointments = () => {
               setDeptFilter('');
               setSearch('');
             }}
-            className="btn-secondary flex items-center gap-2 text-sm"
+            className="btn-secondary flex items-center justify-center gap-2 text-sm w-full lg:w-auto"
           >
             <Filter size={14} /> Clear
           </button>
