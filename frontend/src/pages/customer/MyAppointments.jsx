@@ -65,7 +65,7 @@ const MyAppointments = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">My Appointments</h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -75,7 +75,7 @@ const MyAppointments = () => {
         <MagneticButton strength={0.15}>
           <button
             onClick={() => navigate('/book')}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Calendar size={16} /> Book New
           </button>
@@ -135,22 +135,23 @@ const MyAppointments = () => {
               transition={{ delay: i * 0.05, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="dash-card p-5 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex items-start justify-between gap-4">
+              {/* Top row: info + token */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 {/* Left */}
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 min-w-0">
                   <div
                     className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                     style={{ backgroundColor: apt.department?.color + '20' || '#6366f120' }}
                   >
                     {apt.department?.icon || '🏥'}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-slate-800">{apt.service?.name}</h3>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-slate-800 truncate">{apt.service?.name}</h3>
                       <Badge variant={statusVariant[apt.status]}>{apt.status}</Badge>
                     </div>
-                    <p className="text-sm text-slate-500">{apt.department?.name}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                    <p className="text-sm text-slate-500 truncate">{apt.department?.name}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
                         {new Date(apt.date).toLocaleDateString('en-IN', {
@@ -166,7 +167,7 @@ const MyAppointments = () => {
                 </div>
 
                 {/* Right */}
-                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                <div className="flex sm:flex-col sm:items-end items-center gap-2 flex-shrink-0">
                   <span className="font-mono font-bold text-primary-600 bg-primary-50 px-3 py-1 rounded-xl text-sm">
                     {apt.queueToken}
                   </span>
@@ -264,11 +265,11 @@ const MyAppointments = () => {
             initial={{ opacity: 0, scale: 0.92, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            className="bg-white rounded-3xl p-8 text-center max-w-sm w-full"
+            className="bg-white rounded-3xl p-6 text-center max-w-sm w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center mb-4">
-              <QRCode value={showQR.bookingReference} size={200} />
+              <QRCode value={showQR.bookingReference} size={160} />
             </div>
             <p className="mt-4 font-mono font-bold text-lg text-slate-800">
               {showQR.queueToken}
