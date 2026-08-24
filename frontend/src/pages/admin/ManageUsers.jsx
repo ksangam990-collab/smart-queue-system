@@ -243,7 +243,7 @@ const ManageUsers = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center max-h-[90vh] overflow-y-auto"
             >
               <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                 <Trash2 size={28} className="text-red-500" />
