@@ -158,23 +158,23 @@ const LiveQueue = () => {
 
                 <div className="p-6">
                   {/* Appointment info */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                         style={{ backgroundColor: apt.department?.color + '20' || '#6366f120' }}
                       >
                         {apt.department?.icon || '🏥'}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-800">{apt.service?.name}</h3>
-                        <p className="text-sm text-slate-500">{apt.department?.name}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-800 truncate">{apt.service?.name}</h3>
+                        <p className="text-sm text-slate-500 truncate">{apt.department?.name}</p>
                         <p className="text-xs text-slate-400">
                           {apt.timeSlot?.start} – {apt.timeSlot?.end}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right flex-shrink-0">
                       <p className="text-xs text-slate-400 mb-1">Your Token</p>
                       <span className="font-mono font-bold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-xl text-lg">
                         {apt.queueToken}
