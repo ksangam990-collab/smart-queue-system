@@ -257,15 +257,15 @@ const BookAppointment = () => {
       </div>
 
       {/* Step indicator */}
-      <div className="dash-card p-4">
-        <div className="flex items-center justify-between">
+      <div className="dash-card p-3 sm:p-4">
+        <div className="flex items-center justify-between px-1 sm:px-0">
           {STEPS.map((label, i) => (
-            <div key={i} className="flex items-center flex-1">
+            <div key={i} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center">
                 <motion.div
                   animate={{ scale: i === step ? 1.1 : 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-colors duration-300 ${
                     i < step
                       ? "bg-accent-500 text-white"
                       : i === step
@@ -273,10 +273,10 @@ const BookAppointment = () => {
                         : "bg-slate-100 text-slate-400"
                   }`}
                 >
-                  {i < step ? <CheckCircle size={16} /> : i + 1}
+                  {i < step ? <CheckCircle size={14} /> : i + 1}
                 </motion.div>
                 <span
-                  className={`text-xs mt-1 font-medium hidden sm:block ${
+                  className={`text-[10px] sm:text-xs mt-1 font-medium hidden sm:block ${
                     i === step ? "text-primary-600" : "text-slate-400"
                   }`}
                 >
@@ -284,7 +284,7 @@ const BookAppointment = () => {
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 bg-slate-200 overflow-hidden rounded-full">
+                <div className="flex-1 h-0.5 mx-1 sm:mx-2 bg-slate-200 overflow-hidden rounded-full">
                   <motion.div
                     className="h-full bg-accent-500"
                     initial={false}
@@ -474,6 +474,11 @@ const BookAppointment = () => {
                 className="form-input w-full"
                 calendarClassName="slotly-calendar"
                 popperPlacement="bottom-start"
+                popperModifiers={[
+                  { name: "preventOverflow", options: { boundary: "viewport", padding: 12 } },
+                  { name: "flip", options: { fallbackPlacements: ["top-start", "bottom-start"] } },
+                ]}
+                portalId="datepicker-portal"
               />
 
               {/* Time slots */}
