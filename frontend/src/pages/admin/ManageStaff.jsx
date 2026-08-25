@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
+import { avatarFallback } from '../../utils/avatar';
 
 const defaultForm = {
   name: '', email: '', password: '', phone: '', department: '',
@@ -149,7 +150,7 @@ const ManageStaff = () => {
                     alt={member.name}
                     className="w-12 h-12 rounded-2xl object-cover"
                     onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${member.name}&background=5b5ff5&color=fff&size=48`;
+                      e.currentTarget.src = avatarFallback(member?.name, '5b5ff5', 48);
                     }}
                   />
                   <div>
@@ -273,7 +274,7 @@ const ManageStaff = () => {
                   >
                     <option value="">Select department (optional)</option>
                     {departments.map((d) => (
-                      <option key={d._id} value={d._id}>
+                      <option key={d._id} value={d._1d}>
                         {d.icon} {d.name}
                       </option>
                     ))}
@@ -331,18 +332,4 @@ const ManageStaff = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleDelete(deleteId)}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl px-5 py-2.5 transition-all"
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-export default ManageStaff;
+{
