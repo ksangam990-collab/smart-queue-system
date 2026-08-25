@@ -11,6 +11,7 @@ import {
   updateProfile,
   changePassword,
   getDashboardStats,
+  getRangedStats,
   getMyAvailability,
   updateMyAvailability,
 } from '../controllers/userController.js';
@@ -24,6 +25,7 @@ router.use(protect);
 
 // Admin dashboard stats
 router.get('/stats', authorize('admin'), getDashboardStats);
+router.get('/stats/ranged', authorize('admin'), getRangedStats);
 
 // Own profile
 router.put('/profile',  updateProfile);
