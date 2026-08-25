@@ -1,7 +1,7 @@
 // frontend/src/pages/auth/Register.jsx
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../components/common/Logo";
@@ -21,6 +21,7 @@ const ROLE_HOME = {
 
 const Register = () => {
   useLenis();
+  const navigate = useNavigate();
   const { register: registerUser, loading } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +46,7 @@ const Register = () => {
 
       if (result && result.success) {
         const destination = ROLE_HOME[result.role] || "/dashboard";
-        window.location.href = destination;
+        navigate(destination);
       }
     } catch (err) {
       console.error("Register error:", err);
@@ -101,9 +102,8 @@ const Register = () => {
               <Link
                 to="/"
                 data-cursor="hover"
-                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:[...]
               >
-                <ArrowLeft size={15} /> Back to home
               </Link>
             </div>
           </div>
@@ -203,7 +203,7 @@ const Register = () => {
               {/* Phone */}
               <div>
                 <label className="form-label">
-                  Phone number{" "}
+                  Phone number {" "}
                   <span className="text-slate-400 font-normal">(optional)</span>
                 </label>
                 <div className="relative">
@@ -302,7 +302,7 @@ const Register = () => {
 
             {/* Login link */}
             <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-              Already have an account?{" "}
+              Already have an account? {" "}
               <Link
                 to="/login"
                 data-cursor="hover"
