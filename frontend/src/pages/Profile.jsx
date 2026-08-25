@@ -4,6 +4,7 @@ import { User, Lock, Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { avatarFallback } from '../utils/avatar';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -83,7 +84,7 @@ const Profile = () => {
             alt={user?.name}
             className="w-16 h-16 rounded-2xl object-cover"
             onError={(e) => {
-              e.target.src = `https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff&size=64`;
+              e.currentTarget.src = avatarFallback(user?.name, '6366f1', 64);
             }}
           />
           <label className="btn-secondary cursor-pointer text-sm">
