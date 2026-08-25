@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Bell, Check } from 'lucide-react';
 import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
+import { NotificationsSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 
 const Notifications = () => {
@@ -26,7 +27,7 @@ const Notifications = () => {
     fetchAll();
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
+  if (loading) return <NotificationsSkeleton />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
