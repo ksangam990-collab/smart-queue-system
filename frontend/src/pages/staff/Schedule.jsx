@@ -10,6 +10,7 @@ import {
 import api from '../../services/api';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { QueuePanelSkeleton } from '../../components/common/Skeleton';
 import toast from 'react-hot-toast';
 
 const DAYS_OF_WEEK = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -173,7 +174,7 @@ const Schedule = () => {
             transition={{ duration: 0.2 }}
           >
             {loading ? (
-              <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+              <QueuePanelSkeleton />
             ) : appointments.length === 0 ? (
               <div className="dash-card p-16 text-center">
                 <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
