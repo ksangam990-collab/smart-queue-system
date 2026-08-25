@@ -293,9 +293,10 @@ export const getAllAppointments = async (req, res) => {
       search,
     } = req.query;
 
+    // ── Build base filter (non-search fields go directly into MongoDB) ──
     const filter = {};
-    if (status) filter.status = status;
-    if (department) filter.department = department;
+    if (status)     filter.status     = status;
+    if (department) filter.department = new (await import('mongoose')).default.Types.ObjectId(department);
     if (date) {
       filter.date = {
         $gte: new Date(date).setHours(0, 0, 0, 0),
@@ -303,23 +304,39 @@ export const getAllAppointments = async (req, res) => {
       };
     }
 
+    // ── Search: resolve matching user IDs first, then filter in DB ──
+    // This means pagination is always correct — we never filter post-fetch.
+    if (search) {
+      const User = (await import('../models/User.js')).default;
+      const searchRegex = new RegExp(search, 'i');
+
+      // Find users whose name or email matches
+      const matchingUsers = await User.find({
+        $or: [
+          { name:  searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex },
+        ],
+      }).select('_id');
+
+      const userIds = matchingUsers.map((u) => u._id);
+
+      // Also allow direct booking reference / queue token search
+      filter.$or = [
+        { user:             { $in: userIds }    },
+        { bookingReference: searchRegex         },
+        { queueToken:       searchRegex         },
+      ];
+    }
+
     const total = await Appointment.countDocuments(filter);
-    let appointments = await Appointment.find(filter)
-      .populate("user", "name email phone avatar")
-      .populate("department", "name icon color")
-      .populate("service", "name duration fee")
-      .sort({ date: -1, "timeSlot.start": 1 })
+    const appointments = await Appointment.find(filter)
+      .populate('user',       'name email phone avatar')
+      .populate('department', 'name icon color')
+      .populate('service',    'name duration fee')
+      .sort({ date: -1, 'timeSlot.start': 1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-
-    // Search by user name
-    if (search) {
-      appointments = appointments.filter(
-        (a) =>
-          a.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-          a.bookingReference?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
 
     return res.status(200).json({
       success: true,
