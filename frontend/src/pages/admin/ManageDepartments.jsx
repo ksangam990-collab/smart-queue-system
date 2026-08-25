@@ -10,6 +10,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { TablePageSkeleton } from '../../components/common/Skeleton';
 
 const ICONS  = ['🏥','🦷','👁','🧪','💊','🏋️','🧠','❤️','🩺','🦴','🩸','🏨'];
 const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
@@ -219,7 +220,7 @@ const ManageDepartments = () => {
 
       {/* Department cards */}
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <TablePageSkeleton cols={5} rows={5} />
       ) : departments.length === 0 ? (
         <div className="dash-card p-16 text-center">
           <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
