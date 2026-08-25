@@ -25,6 +25,7 @@ import {
   Legend,
 } from "recharts";
 import StatsCard from "../../components/common/StatsCard";
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import Badge from "../../components/common/Badge";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -105,6 +106,8 @@ const AdminDashboard = () => {
   }, []);
 
   const weeklyData = stats?.weeklyData || [];
+
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">
