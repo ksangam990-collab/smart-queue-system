@@ -168,3 +168,189 @@ Didn't request this? No action is needed — your password will stay the same an
 — The Slotly Team
 Support: ${SUPPORT_CONTACT}
 `;
+
+// ─── Appointment email helpers ───────────────────────────────────
+
+// Formats a date string like "Monday, 25 Aug 2026"
+const fmtDate = (dateStr) =>
+  new Date(dateStr).toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'short', year: 'numeric',
+  });
+
+// Info row used inside appointment emails (label + value pair)
+const infoRow = (label, value) => `
+  <tr>
+    <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 140px; vertical-align: top;">${label}</td>
+    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 600; vertical-align: top;">${value}</td>
+  </tr>
+`;
+
+// Appointment detail card — used by all 3 appointment templates
+const appointmentCard = ({ service, department, date, timeSlot, queueToken, bookingReference, fee }) => `
+  <div style="background: #f8faff; border: 1px solid #e3e5ff; border-radius: 20px; padding: 24px; margin: 24px 0;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+      <span style="font-size: 28px;">${department?.icon || '🏥'}</span>
+      <div>
+        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;">${service?.name || 'Appointment'}</p>
+        <p style="margin: 0; font-size: 13px; color: #64748b;">${department?.name || ''}</p>
+      </div>
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+      ${infoRow('📅 Date', fmtDate(date))}
+      ${infoRow('⏰ Time', `${timeSlot?.start} – ${timeSlot?.end}`)}
+      ${infoRow('🎫 Queue Token', `<span style="font-family: monospace; background: #ede9fe; color: #5b5ff5; padding: 2px 10px; border-radius: 8px;">${queueToken}</span>`)}
+      ${infoRow('🔖 Booking Ref', bookingReference || '—')}
+      ${fee > 0 ? infoRow('💳 Fee', `₹${fee}`) : ''}
+    </table>
+  </div>
+`;
+
+// ─── 1. Booking Confirmation ─────────────────────────────────────
+export const getBookingConfirmationHTML = ({ name, appointment, baseUrl }) =>
+  emailShell(`
+    <h2 style="margin: 0 0 8px; color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.01em;">
+      Appointment Confirmed ✅
+    </h2>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">Hi ${name},</p>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">
+      Your appointment has been booked successfully. Here are your details:
+    </p>
+
+    ${appointmentCard(appointment)}
+
+    ${primaryButton(`${baseUrl}/my-appointments`, 'View My Appointments')}
+
+    ${noticeBox('Please arrive 5 minutes early. Show your queue token <strong>${appointment.queueToken}</strong> at the reception.')}
+
+    <p style="margin: 20px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.6;">
+      To cancel or reschedule, visit My Appointments in the Slotly app at least 1 hour before your slot.
+    </p>
+  `);
+
+export const getBookingConfirmationText = ({ name, appointment, baseUrl }) => `
+Hi ${name},
+
+Your appointment has been confirmed on Slotly!
+
+Service     : ${appointment.service?.name}
+Department  : ${appointment.department?.name}
+Date        : ${fmtDate(appointment.date)}
+Time        : ${appointment.timeSlot?.start} – ${appointment.timeSlot?.end}
+Queue Token : ${appointment.queueToken}
+Booking Ref : ${appointment.bookingReference}
+${appointment.fee > 0 ? `Fee         : ₹${appointment.fee}` : ''}
+
+View your appointment: ${baseUrl}/my-appointments
+
+Please arrive 5 minutes early and show your queue token at the reception.
+
+— The Slotly Team
+Support: ${SUPPORT_CONTACT}
+`;
+
+// ─── 2. Cancellation ─────────────────────────────────────────────
+export const getAppointmentCancelledHTML = ({ name, appointment, reason, cancelledBy, baseUrl }) => {
+  const byWhom = cancelledBy === 'admin' ? 'the clinic' : 'you';
+  return emailShell(`
+    <h2 style="margin: 0 0 8px; color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.01em;">
+      Appointment Cancelled ❌
+    </h2>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">Hi ${name},</p>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">
+      Your appointment has been cancelled by ${byWhom}.
+      ${reason ? `<br><strong>Reason:</strong> ${reason}` : ''}
+    </p>
+
+    ${appointmentCard(appointment)}
+
+    ${primaryButton(`${baseUrl}/book`, 'Book a New Appointment')}
+
+    <p style="margin: 12px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.6;">
+      If you didn't request this cancellation, please contact us immediately at
+      <a href="mailto:${SUPPORT_CONTACT}" style="color: #5b5ff5; text-decoration: none;">${SUPPORT_CONTACT}</a>.
+    </p>
+  `);
+};
+
+export const getAppointmentCancelledText = ({ name, appointment, reason, cancelledBy, baseUrl }) => {
+  const byWhom = cancelledBy === 'admin' ? 'the clinic' : 'you';
+  return `
+Hi ${name},
+
+Your appointment has been cancelled by ${byWhom}.${reason ? `\nReason: ${reason}` : ''}
+
+Service     : ${appointment.service?.name}
+Department  : ${appointment.department?.name}
+Date        : ${fmtDate(appointment.date)}
+Time        : ${appointment.timeSlot?.start} – ${appointment.timeSlot?.end}
+Queue Token : ${appointment.queueToken}
+
+Book a new appointment: ${baseUrl}/book
+
+— The Slotly Team
+Support: ${SUPPORT_CONTACT}
+`;
+};
+
+// ─── 3. Status Update (completed / no-show / re-confirmed) ──────
+export const getAppointmentStatusHTML = ({ name, appointment, status, baseUrl }) => {
+  const configs = {
+    completed: {
+      emoji: '🎉',
+      title: 'Appointment Completed',
+      body: 'Your appointment has been marked as completed. We hope everything went well!',
+      cta: 'Leave Feedback',
+      ctaUrl: `${baseUrl}/feedback`,
+    },
+    'no-show': {
+      emoji: '⚠️',
+      title: 'Appointment Missed',
+      body: 'You were marked as a no-show for your appointment. If this is a mistake, please contact us.',
+      cta: 'Book Again',
+      ctaUrl: `${baseUrl}/book`,
+    },
+    confirmed: {
+      emoji: '✅',
+      title: 'Appointment Re-confirmed',
+      body: 'Your appointment has been re-confirmed by the clinic. See you soon!',
+      cta: 'View Appointment',
+      ctaUrl: `${baseUrl}/my-appointments`,
+    },
+  };
+  const c = configs[status] || configs.confirmed;
+  return emailShell(`
+    <h2 style="margin: 0 0 8px; color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.01em;">
+      ${c.emoji} ${c.title}
+    </h2>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">Hi ${name},</p>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">${c.body}</p>
+
+    ${appointmentCard(appointment)}
+
+    ${primaryButton(c.ctaUrl, c.cta)}
+  `);
+};
+
+export const getAppointmentStatusText = ({ name, appointment, status, baseUrl }) => {
+  const titles = {
+    completed: 'Your appointment has been completed.',
+    'no-show': 'You were marked as a no-show for your appointment.',
+    confirmed: 'Your appointment has been re-confirmed.',
+  };
+  return `
+Hi ${name},
+
+${titles[status] || `Your appointment status has been updated to: ${status}.`}
+
+Service     : ${appointment.service?.name}
+Department  : ${appointment.department?.name}
+Date        : ${fmtDate(appointment.date)}
+Time        : ${appointment.timeSlot?.start} – ${appointment.timeSlot?.end}
+Queue Token : ${appointment.queueToken}
+
+${status === 'completed' ? `Leave feedback: ${baseUrl}/feedback` : `View appointments: ${baseUrl}/my-appointments`}
+
+— The Slotly Team
+Support: ${SUPPORT_CONTACT}
+`;
+};
