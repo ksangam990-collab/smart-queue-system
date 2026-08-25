@@ -10,6 +10,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { TablePageSkeleton } from '../../components/common/Skeleton';
 
 const defaultForm = {
   name: '', email: '', password: '', phone: '', department: '',
@@ -119,7 +120,7 @@ const ManageStaff = () => {
 
       {/* Staff cards */}
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <TablePageSkeleton cols={5} rows={5} />
       ) : staff.length === 0 ? (
         <div className="dash-card p-16 text-center">
           <Briefcase size={48} className="mx-auto text-slate-300 mb-4" />
