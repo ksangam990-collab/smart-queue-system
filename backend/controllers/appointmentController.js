@@ -19,7 +19,7 @@ import {
   getAppointmentStatusText,
 } from "../utils/sendEmail.js";
 
-const BASE_URL = process.env.FRONTEND_URL || 'https://slotly.vercel.app';
+const BASE_URL = process.env.FRONTEND_URL || 'https://slotly.ksangam.dpdns.org';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
