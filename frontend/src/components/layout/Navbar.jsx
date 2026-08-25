@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../hooks/useTheme";
+import { avatarFallback } from '../../utils/avatar';
 
 const Navbar = ({ title = "Dashboard", onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -72,7 +73,7 @@ const Navbar = ({ title = "Dashboard", onMenuClick }) => {
               alt={user?.name}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200"
               onError={(e) => {
-                e.target.src = `https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`;
+                e.currentTarget.src = avatarFallback(user?.name, '6366f1', 48);
               }}
             />
             <div className="hidden sm:block text-left">
