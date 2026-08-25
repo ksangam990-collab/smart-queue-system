@@ -10,6 +10,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { QueuePanelSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 
 const statusVariant = {
@@ -141,7 +142,7 @@ const QueuePanel = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+      <QueuePanelSkeleton />
       ) : !queue ? (
         <div className="dash-card p-16 text-center">
           <Users size={48} className="mx-auto text-slate-300 mb-4" />
