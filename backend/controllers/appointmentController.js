@@ -9,6 +9,17 @@ import {
   generateQueueToken,
   generateTimeSlots,
 } from "../utils/generateQueueToken.js";
+import {
+  sendEmail,
+  getBookingConfirmationHTML,
+  getBookingConfirmationText,
+  getAppointmentCancelledHTML,
+  getAppointmentCancelledText,
+  getAppointmentStatusHTML,
+  getAppointmentStatusText,
+} from "../utils/sendEmail.js";
+
+const BASE_URL = process.env.FRONTEND_URL || 'https://slotly.vercel.app';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
@@ -210,6 +221,24 @@ export const bookAppointment = async (req, res) => {
       $inc: { totalAppointments: 1 },
     });
 
+    // Send booking confirmation email (non-blocking — never fail the booking)
+    sendEmail({
+      to: appointment.user.email,
+      subject: `✅ Appointment Confirmed – ${service.name} | Token ${token}`,
+      html: getBookingConfirmationHTML({
+        name: appointment.user.name,
+        appointment,
+        baseUrl: BASE_URL,
+      }),
+      text: getBookingConfirmationText({
+        name: appointment.user.name,
+        appointment,
+        baseUrl: BASE_URL,
+      }),
+    }).catch((err) =>
+      console.error('[bookAppointment] Confirmation email failed:', err.message)
+    );
+
     return res.status(201).json({
       success: true,
       message: "Appointment booked successfully!",
@@ -360,9 +389,16 @@ export const updateAppointmentStatus = async (req, res) => {
 
     await appointment.save();
 
-    // Notify the user
+    // Populate user + service + department for email & notification
+    await appointment.populate([
+      { path: "user", select: "name email" },
+      { path: "service", select: "name" },
+      { path: "department", select: "name icon" },
+    ]);
+
+    // In-app notification
     await Notification.create({
-      recipient: appointment.user,
+      recipient: appointment.user._id,
       title: `Appointment ${status}`,
       message: `Your appointment (${appointment.queueToken}) has been marked as ${status}.`,
       type:
@@ -372,6 +408,50 @@ export const updateAppointmentStatus = async (req, res) => {
       appointment: appointment._id,
       link: "/my-appointments",
     });
+
+    // Email — cancelled by admin uses cancellation template; other status
+    // changes (confirmed, completed, no-show) use the status update template
+    if (status === "cancelled") {
+      sendEmail({
+        to: appointment.user.email,
+        subject: `❌ Appointment Cancelled – ${appointment.service?.name}`,
+        html: getAppointmentCancelledHTML({
+          name: appointment.user.name,
+          appointment,
+          reason: cancelReason,
+          cancelledBy: 'admin',
+          baseUrl: BASE_URL,
+        }),
+        text: getAppointmentCancelledText({
+          name: appointment.user.name,
+          appointment,
+          reason: cancelReason,
+          cancelledBy: 'admin',
+          baseUrl: BASE_URL,
+        }),
+      }).catch((err) =>
+        console.error('[updateAppointmentStatus] Cancellation email failed:', err.message)
+      );
+    } else {
+      sendEmail({
+        to: appointment.user.email,
+        subject: `📋 Appointment Update – ${appointment.service?.name}`,
+        html: getAppointmentStatusHTML({
+          name: appointment.user.name,
+          appointment,
+          status,
+          baseUrl: BASE_URL,
+        }),
+        text: getAppointmentStatusText({
+          name: appointment.user.name,
+          appointment,
+          status,
+          baseUrl: BASE_URL,
+        }),
+      }).catch((err) =>
+        console.error('[updateAppointmentStatus] Status email failed:', err.message)
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -408,6 +488,35 @@ export const cancelAppointment = async (req, res) => {
     appointment.status = "cancelled";
     appointment.cancelReason = req.body.reason || "Cancelled by user";
     await appointment.save();
+
+    // Populate for email
+    await appointment.populate([
+      { path: "user", select: "name email" },
+      { path: "service", select: "name" },
+      { path: "department", select: "name icon" },
+    ]);
+
+    // Send cancellation email (non-blocking)
+    sendEmail({
+      to: appointment.user.email,
+      subject: `❌ Appointment Cancelled – ${appointment.service?.name}`,
+      html: getAppointmentCancelledHTML({
+        name: appointment.user.name,
+        appointment,
+        reason: appointment.cancelReason,
+        cancelledBy: 'user',
+        baseUrl: BASE_URL,
+      }),
+      text: getAppointmentCancelledText({
+        name: appointment.user.name,
+        appointment,
+        reason: appointment.cancelReason,
+        cancelledBy: 'user',
+        baseUrl: BASE_URL,
+      }),
+    }).catch((err) =>
+      console.error('[cancelAppointment] Cancellation email failed:', err.message)
+    );
 
     return res.status(200).json({
       success: true,
