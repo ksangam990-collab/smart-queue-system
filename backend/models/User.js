@@ -46,6 +46,18 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Department',
     },
+    // Staff availability settings
+    availability: {
+      workingDays: {
+        type: [String],
+        enum: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+        default: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
+      },
+      offDates: {
+        type: [String], // ISO date strings e.g. "2026-08-25"
+        default: [],
+      },
+    },
     isVerified: {
       type: Boolean,
       default: false,
