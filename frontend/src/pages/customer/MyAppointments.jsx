@@ -8,6 +8,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { AppointmentsSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 import QRCode from 'react-qr-code';
 
@@ -108,7 +109,7 @@ const MyAppointments = () => {
 
       {/* Appointments list */}
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <AppointmentsSkeleton />
       ) : appointments.length === 0 ? (
         <div className="dash-card p-16 text-center">
           <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
