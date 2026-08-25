@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Clock, Zap, Star, Plus, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/common/StatsCard';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import Badge from '../../components/common/Badge';
 import MagneticButton from '../../components/home/MagneticButton';
 import { useAuth } from '../../hooks/useAuth';
@@ -66,6 +67,8 @@ const CustomerDashboard = () => {
   const recentBookings = [...appointments]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
+
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">
