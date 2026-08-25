@@ -1,10 +1,12 @@
 // frontend/src/pages/customer/LiveQueue.jsx
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, Clock, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Clock, RefreshCw, CheckCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import api from '../../services/api';
+import socket from '../../services/socket';
 import Spinner from '../../components/common/Spinner';
+import { CardItemSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 
 const LiveQueue = () => {
@@ -13,19 +15,19 @@ const LiveQueue = () => {
   const [loading, setLoading]           = useState(true);
   const [refreshing, setRefreshing]     = useState(false);
   const [lastUpdated, setLastUpdated]   = useState(null);
+  const [connected, setConnected]       = useState(false);
+  const joinedRoomsRef                  = useRef(new Set());
 
-  // Fetch customer's active appointments
+  // ── Fetch appointments from API ────────────────────────────
   const fetchActiveAppointments = useCallback(async () => {
     try {
       const { data } = await api.get('/appointments/my?status=confirmed');
-      setAppointments(data.data || []);
       return data.data || [];
     } catch {
       return [];
     }
   }, []);
 
-  // Fetch queue position for each appointment
   const fetchQueuePositions = useCallback(async (apts) => {
     const positions = {};
     await Promise.all(
@@ -40,29 +42,71 @@ const LiveQueue = () => {
         }
       })
     );
-    setQueueData(positions);
+    return positions;
   }, []);
 
   const loadAll = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     else setLoading(true);
     try {
-      const apts = await fetchActiveAppointments();
-      await fetchQueuePositions(apts);
+      const apts      = await fetchActiveAppointments();
+      const positions = await fetchQueuePositions(apts);
+      setAppointments(apts);
+      setQueueData(positions);
       setLastUpdated(new Date());
+
+      // Join socket rooms for each department
+      apts.forEach((apt) => {
+        const deptId = apt.department?._id;
+        if (deptId && !joinedRoomsRef.current.has(deptId)) {
+          socket.emit('join_queue_room', { departmentId: deptId });
+          joinedRoomsRef.current.add(deptId);
+        }
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [fetchActiveAppointments, fetchQueuePositions]);
 
+  // ── Socket.io setup ────────────────────────────────────────
   useEffect(() => {
-    loadAll();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => loadAll(true), 30000);
-    return () => clearInterval(interval);
-  }, [loadAll]);
+    socket.connect();
 
+    socket.on('connect',    () => setConnected(true));
+    socket.on('disconnect', () => setConnected(false));
+
+    // When server emits a queue update, refresh positions for all appointments
+    socket.on('queue_updated', (payload) => {
+      setLastUpdated(new Date());
+      // Re-fetch positions silently (payload has currentToken / waitingCount
+      // but we need full position data per appointment)
+      setRefreshing(true);
+      fetchActiveAppointments()
+        .then((apts) => fetchQueuePositions(apts).then((positions) => {
+          setAppointments(apts);
+          setQueueData(positions);
+        }))
+        .finally(() => setRefreshing(false));
+    });
+
+    // Initial load
+    loadAll();
+
+    return () => {
+      // Leave all joined rooms on unmount
+      joinedRoomsRef.current.forEach((deptId) => {
+        socket.emit('leave_queue_room', { departmentId: deptId });
+      });
+      joinedRoomsRef.current.clear();
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('queue_updated');
+      socket.disconnect();
+    };
+  }, [loadAll, fetchActiveAppointments, fetchQueuePositions]);
+
+  // ── Helpers ────────────────────────────────────────────────
   const getStatusColor = (status) => {
     if (status === 'called')  return 'text-green-600 bg-green-50 border-green-200';
     if (status === 'serving') return 'text-blue-600 bg-blue-50 border-blue-200';
@@ -82,48 +126,54 @@ const LiveQueue = () => {
     <div className="space-y-6 max-w-2xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Live Queue</h2>
-          <p className="text-slate-500 text-sm mt-1">
-            Track your real-time queue position
-          </p>
+          <p className="text-slate-500 text-sm mt-1">Track your real-time queue position</p>
         </div>
-        <MagneticButton strength={0.15}>
-          <button
-            onClick={() => loadAll(true)}
-            disabled={refreshing}
-            className="btn-secondary flex items-center gap-2 text-sm"
-          >
-            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-            Refresh
-          </button>
-        </MagneticButton>
+        <div className="flex items-center gap-2">
+          {/* Connection indicator */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium ${
+            connected
+              ? 'bg-emerald-50 text-emerald-600'
+              : 'bg-slate-100 text-slate-400'
+          }`}>
+            {connected
+              ? <><Wifi size={12} /> Live</>
+              : <><WifiOff size={12} /> Connecting…</>
+            }
+          </div>
+          <MagneticButton strength={0.15}>
+            <button
+              onClick={() => loadAll(true)}
+              disabled={refreshing}
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </MagneticButton>
+        </div>
       </div>
 
       {/* Last updated */}
       {lastUpdated && (
         <p className="text-xs text-slate-400">
-          Last updated: {lastUpdated.toLocaleTimeString()} · Auto-refreshes every 30s
+          Last updated: {lastUpdated.toLocaleTimeString()}
+          {connected ? ' · Updates instantly via live connection' : ' · Reconnecting…'}
         </p>
       )}
 
       {/* Loading */}
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <div className="space-y-5">{Array.from({length:2}).map((_,i)=><CardItemSkeleton key={i}/>)}</div>
       ) : appointments.length === 0 ? (
         <div className="dash-card p-16 text-center">
           <Zap size={48} className="mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-600 mb-2">
-            No active appointments
-          </h3>
-          <p className="text-slate-400 text-sm mb-6">
-            You have no confirmed appointments today to track.
-          </p>
+          <h3 className="text-lg font-semibold text-slate-600 mb-2">No active appointments</h3>
+          <p className="text-slate-400 text-sm mb-6">You have no confirmed appointments today to track.</p>
           <MagneticButton className="inline-block" strength={0.15}>
-            <a href="/book" className="btn-primary inline-flex">
-              Book Appointment
-            </a>
+            <a href="/book" className="btn-primary inline-flex">Book Appointment</a>
           </MagneticButton>
         </div>
       ) : (
@@ -141,20 +191,22 @@ const LiveQueue = () => {
                 transition={{ delay: idx * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="dash-card overflow-hidden"
               >
-                {/* Alert message */}
-                {message && (
-                  <div
-                    className={`relative px-6 py-3 border-b text-sm font-medium flex items-center gap-2 ${getStatusColor(status)} ${
-                      status === 'called' ? 'animate-pulse-soft' : ''
-                    }`}
-                  >
-                    {status === 'called'
-                      ? <AlertCircle size={16} />
-                      : <CheckCircle size={16} />
-                    }
-                    {message}
-                  </div>
-                )}
+                {/* Alert banner */}
+                <AnimatePresence>
+                  {message && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className={`px-6 py-3 border-b text-sm font-medium flex items-center gap-2 ${getStatusColor(status)} ${
+                        status === 'called' ? 'animate-pulse-soft' : ''
+                      }`}
+                    >
+                      {status === 'called' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                      {message}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="p-6">
                   {/* Appointment info */}
@@ -169,9 +221,7 @@ const LiveQueue = () => {
                       <div className="min-w-0">
                         <h3 className="font-semibold text-slate-800 truncate">{apt.service?.name}</h3>
                         <p className="text-sm text-slate-500 truncate">{apt.department?.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {apt.timeSlot?.start} – {apt.timeSlot?.end}
-                        </p>
+                        <p className="text-xs text-slate-400">{apt.timeSlot?.start} – {apt.timeSlot?.end}</p>
                       </div>
                     </div>
                     <div className="sm:text-right flex-shrink-0">
@@ -185,16 +235,12 @@ const LiveQueue = () => {
                   {/* Queue stats */}
                   {queue ? (
                     <div className="grid grid-cols-3 gap-2 sm:gap-4">
-
-                      {/* Current token */}
                       <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 text-center">
                         <p className="text-[11px] sm:text-xs text-slate-500 mb-1">Now Serving</p>
                         <p className="text-lg sm:text-xl font-bold text-slate-800 font-mono">
                           {queue.currentToken || '—'}
                         </p>
                       </div>
-
-                      {/* Position */}
                       <div className="bg-primary-50 rounded-2xl p-3 sm:p-4 text-center border border-primary-100">
                         <p className="text-[11px] sm:text-xs text-primary-600 mb-1">Your Position</p>
                         <motion.p
@@ -207,15 +253,10 @@ const LiveQueue = () => {
                           #{queue.position || '—'}
                         </motion.p>
                       </div>
-
-                      {/* Wait time */}
                       <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 text-center">
                         <p className="text-[11px] sm:text-xs text-slate-500 mb-1">Est. Wait</p>
                         <p className="text-lg sm:text-xl font-bold text-slate-800">
-                          {queue.estimatedWait > 0
-                            ? `${queue.estimatedWait}m`
-                            : '—'
-                          }
+                          {queue.estimatedWait > 0 ? `${queue.estimatedWait}m` : '—'}
                         </p>
                       </div>
                     </div>
@@ -259,7 +300,7 @@ const LiveQueue = () => {
         <ul className="space-y-2 text-xs text-slate-500">
           <li className="flex items-start gap-2">
             <span className="text-primary-500 mt-0.5">•</span>
-            Page auto-refreshes every 30 seconds
+            This page updates <strong>instantly</strong> via a live connection — no need to refresh
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary-500 mt-0.5">•</span>
@@ -267,7 +308,7 @@ const LiveQueue = () => {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary-500 mt-0.5">•</span>
-            You'll get a notification when your token is called
+            You'll get a notification and email when your turn is coming
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary-500 mt-0.5">•</span>
