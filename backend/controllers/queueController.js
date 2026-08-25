@@ -1,8 +1,17 @@
 // backend/controllers/queueController.js
 
-import Queue       from '../models/Queue.js';
-import Appointment from '../models/Appointment.js';
+import Queue        from '../models/Queue.js';
+import Appointment  from '../models/Appointment.js';
 import Notification from '../models/Notification.js';
+import {
+  sendEmail,
+  getQueueAlertHTML,
+  getQueueAlertText,
+} from '../utils/sendEmail.js';
+
+const BASE_URL     = process.env.FRONTEND_URL || 'https://slotly.vercel.app';
+// Alert patients who are this many positions away (2 = second in line)
+const ALERT_AT_POSITIONS = [2, 3];
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
@@ -111,7 +120,7 @@ export const callNext = async (req, res) => {
 
     await queue.save();
 
-    // Notify the patient
+    // ── Notify the called patient ──────────────────────────────
     if (nextItem.appointment?.user) {
       await Notification.create({
         recipient: nextItem.appointment.user._id,
@@ -120,6 +129,78 @@ export const callNext = async (req, res) => {
         type:      'queue_called',
         link:      '/live-queue',
       });
+    }
+
+    // ── Send "your turn is coming" alert to patients 2–3 positions ahead ──
+    // Re-fetch the queue with full population so we have user emails
+    const freshQueue = await Queue.findById(queue._id).populate({
+      path: 'waitingList.appointment',
+      populate: [
+        { path: 'user',       select: 'name email' },
+        { path: 'service',    select: 'name'       },
+        { path: 'department', select: 'name icon'  },
+      ],
+    });
+
+    const stillWaiting = freshQueue.waitingList
+      .filter((item) => item.status === 'waiting')
+      .sort((a, b) => a.tokenNumber - b.tokenNumber);
+
+    const alertPromises = [];
+    stillWaiting.forEach((item, idx) => {
+      const position = idx + 1; // 1 = next up, 2 = second, etc.
+      if (ALERT_AT_POSITIONS.includes(position) && !item.alertSent) {
+        const apt  = item.appointment;
+        const user = apt?.user;
+        if (!user?.email) return;
+
+        const avgMinutesPerPatient = 15;
+        const estimatedMinutes     = (position - 1) * avgMinutesPerPatient;
+
+        // Mark alert sent (in-memory, then bulk-save below)
+        item.alertSent = true;
+
+        // In-app notification
+        alertPromises.push(
+          Notification.create({
+            recipient: user._id,
+            title:     `⏰ ${position === 1 ? 'You are next!' : `${position} positions away`}`,
+            message:   `Token ${item.token} — head to ${apt.department?.name || 'the clinic'} now.`,
+            type:      'queue_alert',
+            link:      '/live-queue',
+          })
+        );
+
+        // Email alert (non-blocking)
+        sendEmail({
+          to:      user.email,
+          subject: `⏰ Your Turn Is Coming – Token ${item.token}`,
+          html: getQueueAlertHTML({
+            name: user.name,
+            appointment: apt,
+            position,
+            estimatedMinutes,
+            baseUrl: BASE_URL,
+          }),
+          text: getQueueAlertText({
+            name: user.name,
+            appointment: apt,
+            position,
+            estimatedMinutes,
+            baseUrl: BASE_URL,
+          }),
+        }).catch((err) =>
+          console.error(`[callNext] Queue alert email failed for token ${item.token}:`, err.message)
+        );
+      }
+    });
+
+    // Persist alertSent flags + await in-app notifications
+    if (alertPromises.length) {
+      await Promise.all([
+        freshQueue.save(),
+        ...alertPromises,
+      ]);
     }
 
     return res.status(200).json({
