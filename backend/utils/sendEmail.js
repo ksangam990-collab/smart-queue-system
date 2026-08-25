@@ -354,3 +354,46 @@ ${status === 'completed' ? `Leave feedback: ${baseUrl}/feedback` : `View appoint
 Support: ${SUPPORT_CONTACT}
 `;
 };
+
+// ─── 4. Queue "Your Turn Is Coming" Alert ───────────────────────
+export const getQueueAlertHTML = ({ name, appointment, position, estimatedMinutes, baseUrl }) =>
+  emailShell(`
+    <h2 style="margin: 0 0 8px; color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.01em;">
+      ⏰ Your Turn Is Coming Soon!
+    </h2>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">Hi ${name},</p>
+    <p style="margin: 0 0 4px; color: #475569; font-size: 15px; line-height: 1.7;">
+      You are <strong style="color: #5b5ff5;">${position} position${position > 1 ? 's' : ''} away</strong> from being called.
+      Please make your way to the clinic now — estimated wait is around
+      <strong>${estimatedMinutes} minute${estimatedMinutes !== 1 ? 's' : ''}</strong>.
+    </p>
+
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 16px 20px; margin: 20px 0; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 28px;">🏃</span>
+      <p style="margin: 0; color: #9a3412; font-size: 14px; line-height: 1.6;">
+        Head to <strong>${appointment.department?.name || 'the clinic'}</strong> now and keep your
+        token <strong style="font-family: monospace; background: #fef3c7; padding: 1px 6px; border-radius: 6px;">${appointment.queueToken}</strong> ready.
+      </p>
+    </div>
+
+    ${appointmentCard(appointment)}
+
+    ${primaryButton(`${baseUrl}/live-queue`, 'Track My Position Live')}
+  `);
+
+export const getQueueAlertText = ({ name, appointment, position, estimatedMinutes, baseUrl }) => `
+Hi ${name},
+
+You are ${position} position${position > 1 ? 's' : ''} away from being called at ${appointment.department?.name || 'the clinic'}.
+
+Please head there now — estimated wait: ${estimatedMinutes} minute${estimatedMinutes !== 1 ? 's' : ''}.
+
+Your token  : ${appointment.queueToken}
+Service     : ${appointment.service?.name}
+Department  : ${appointment.department?.name}
+
+Track live: ${baseUrl}/live-queue
+
+-- The Slotly Team
+Support: ${SUPPORT_CONTACT}
+`;
