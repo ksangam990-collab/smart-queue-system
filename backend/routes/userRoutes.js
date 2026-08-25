@@ -11,6 +11,8 @@ import {
   updateProfile,
   changePassword,
   getDashboardStats,
+  getMyAvailability,
+  updateMyAvailability,
 } from '../controllers/userController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
@@ -27,6 +29,10 @@ router.get('/stats', authorize('admin'), getDashboardStats);
 router.put('/profile',  updateProfile);
 router.put('/password', changePassword);
 router.post('/avatar', upload.single('avatar'), uploadAvatar);
+
+// Staff availability
+router.get('/availability',  getMyAvailability);
+router.put('/availability',  updateMyAvailability);
 
 // Admin routes
 router.get('/',               authorize('admin'), getUsers);
