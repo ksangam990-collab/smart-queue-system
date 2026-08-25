@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
+import { TablePageSkeleton } from '../../components/common/Skeleton';
 import toast from 'react-hot-toast';
 
 // ── Star row ──────────────────────────────────────────────────
@@ -125,7 +126,7 @@ const AdminFeedback = () => {
     return 0;
   });
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
+  if (loading) return <TablePageSkeleton cols={4} rows={5} />;
 
   return (
     <div className="space-y-6">
