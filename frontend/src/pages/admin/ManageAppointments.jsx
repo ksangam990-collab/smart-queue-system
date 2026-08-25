@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
+import { avatarFallback } from '../../utils/avatar';
 
 const statusVariant = {
   completed: 'success',
@@ -206,7 +207,7 @@ const ManageAppointments = () => {
                           alt={apt.user?.name}
                           className="w-8 h-8 rounded-full object-cover"
                           onError={(e) => {
-                            e.target.src = `https://ui-avatars.com/api/?name=${apt.user?.name}&background=5b5ff5&color=fff&size=32`;
+                            e.currentTarget.src = avatarFallback(apt.user?.name, '5b5ff5', 32);
                           }}
                         />
                         <div>
