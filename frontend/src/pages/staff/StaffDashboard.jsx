@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/common/StatsCard';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -111,7 +112,7 @@ const StaffDashboard = () => {
             <h3 className="text-base font-semibold text-slate-800">Today's Schedule</h3>
           </div>
           {loading ? (
-            <div className="flex justify-center py-10"><Spinner /></div>
+          <DashboardSkeleton />
           ) : appointments.length === 0 ? (
             <div className="text-center py-10 text-slate-400 text-sm">
               No appointments today
