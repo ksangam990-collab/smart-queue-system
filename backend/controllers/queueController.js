@@ -8,6 +8,7 @@ import {
   getQueueAlertHTML,
   getQueueAlertText,
 } from '../utils/sendEmail.js';
+import { emitQueueUpdate } from '../socket.js';
 
 const BASE_URL     = process.env.FRONTEND_URL || 'https://slotly.ksangam.dpdns.org';
 // Alert patients who are this many positions away (2 = second in line)
@@ -119,6 +120,14 @@ export const callNext = async (req, res) => {
     queue.totalServed  += 1;
 
     await queue.save();
+
+    // ── Broadcast real-time update to all clients in this dept room ──
+    emitQueueUpdate(queue.department.toString(), {
+      currentToken:  queue.currentToken,
+      currentNumber: queue.currentNumber,
+      totalServed:   queue.totalServed,
+      waitingCount:  queue.waitingList.filter(i => i.status === 'waiting').length,
+    });
 
     // ── Notify the called patient ──────────────────────────────
     if (nextItem.appointment?.user) {
@@ -284,6 +293,14 @@ export const skipToken = async (req, res) => {
     item.status = 'skipped';
     queue.totalSkipped += 1;
     await queue.save();
+
+    // Broadcast skip update
+    emitQueueUpdate(queue.department.toString(), {
+      currentToken:  queue.currentToken,
+      currentNumber: queue.currentNumber,
+      totalServed:   queue.totalServed,
+      waitingCount:  queue.waitingList.filter(i => i.status === 'waiting').length,
+    });
 
     return res.status(200).json({
       success: true,
