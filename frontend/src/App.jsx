@@ -27,6 +27,7 @@ import ManageStaff from "./pages/admin/ManageStaff";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageAppointments from "./pages/admin/ManageAppointments";
 import Reports from "./pages/admin/Reports";
+import AdminFeedback from "./pages/admin/AdminFeedback";
 
 // Staff pages
 import StaffDashboard from "./pages/staff/StaffDashboard";
@@ -127,6 +128,7 @@ const App = () => (
                   element={<ManageAppointments />}
                 />
                 <Route path="/admin/reports" element={<Reports />} />
+                <Route path="/admin/feedback" element={<AdminFeedback />} />
               </Route>
             </Route>
 
