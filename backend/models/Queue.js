@@ -59,6 +59,8 @@ const queueSchema = new mongoose.Schema(
           default: 'waiting',
         },
         calledAt: Date,
+        // Set to true once the "your turn is coming" alert has been sent
+        alertSent: { type: Boolean, default: false },
       },
     ],
   },
