@@ -399,3 +399,87 @@ export const updateMyAvailability = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── Ranged analytics for Reports page ───────────────────────
+export const getRangedStats = async (req, res) => {
+  try {
+    const { startDate, endDate, department } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ success: false, message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end   = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const baseFilter = {
+      date: { $gte: start, $lte: end },
+      ...(department ? { department } : {}),
+    };
+
+    // Total counts for the range
+    const [total, completed, cancelled, pending] = await Promise.all([
+      Appointment.countDocuments(baseFilter),
+      Appointment.countDocuments({ ...baseFilter, status: 'completed' }),
+      Appointment.countDocuments({ ...baseFilter, status: 'cancelled' }),
+      Appointment.countDocuments({ ...baseFilter, status: { $in: ['pending', 'confirmed'] } }),
+    ]);
+
+    // Daily breakdown for chart (one entry per day in range)
+    const days = [];
+    const cur  = new Date(start);
+    while (cur <= end) {
+      const dayStart = new Date(cur); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd   = new Date(cur); dayEnd.setHours(23, 59, 59, 999);
+      const dayFilter = {
+        date: { $gte: dayStart, $lte: dayEnd },
+        ...(department ? { department } : {}),
+      };
+      const [b, c] = await Promise.all([
+        Appointment.countDocuments(dayFilter),
+        Appointment.countDocuments({ ...dayFilter, status: 'completed' }),
+      ]);
+      days.push({
+        day:       cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        bookings:  b,
+        completed: c,
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // Department breakdown (only when no department filter)
+    let deptBreakdown = [];
+    if (!department) {
+      const depts = await Department.find({ isActive: true }).select('name icon color');
+      deptBreakdown = await Promise.all(
+        depts.map(async (d) => {
+          const count = await Appointment.countDocuments({
+            ...baseFilter,
+            department: d._id,
+          });
+          return { name: d.name, icon: d.icon, count };
+        })
+      );
+      deptBreakdown = deptBreakdown.filter((d) => d.count > 0)
+        .sort((a, b) => b.count - a.count);
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        total,
+        completed,
+        cancelled,
+        pending,
+        completionRate: total ? Math.round((completed / total) * 100) : 0,
+        cancellationRate: total ? Math.round((cancelled / total) * 100) : 0,
+        dailyData: days,
+        deptBreakdown,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
