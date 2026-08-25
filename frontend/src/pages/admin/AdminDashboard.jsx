@@ -92,14 +92,18 @@ const statusVariant = {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
         const { data } = await api.get('/users/stats');
         setStats(data.data);
       } catch {
         console.error('Failed to fetch stats');
+      } finally {
+        setLoading(false);
       }
     };
     fetchStats();
