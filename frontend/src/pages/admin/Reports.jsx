@@ -15,6 +15,7 @@ import {
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
+import { ReportsSkeleton } from '../../components/common/Skeleton';
 import StatsCard from '../../components/common/StatsCard';
 
 const COLORS = ['#5b5ff5', '#0fb894', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -154,7 +155,7 @@ const Reports = () => {
     { name: 'Pending',    value: rangedStats.pending   },
   ].filter((d) => d.value > 0) : [];
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
+  if (loading) return <ReportsSkeleton />;
 
   return (
     <div className="space-y-6">
