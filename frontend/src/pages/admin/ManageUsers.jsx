@@ -10,6 +10,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
+import { TablePageSkeleton } from '../../components/common/Skeleton';
 
 const ROLE_FILTERS = ['all', 'customer', 'staff', 'admin'];
 
@@ -112,7 +113,7 @@ const ManageUsers = () => {
       <div className="dash-card overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-primary-500 to-accent-500" />
         {loading ? (
-          <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+          <TablePageSkeleton cols={6} rows={6} />
         ) : users.length === 0 ? (
           <div className="text-center py-16">
             <Users size={40} className="mx-auto text-slate-300 mb-3" />
