@@ -18,6 +18,7 @@ const adminLinks = [
   { to: '/admin/users',        icon: Users,           label: 'Users'        },
   { to: '/admin/appointments', icon: Calendar,        label: 'Appointments' },
   { to: '/admin/reports',      icon: BarChart3,       label: 'Reports'      },
+  { to: '/admin/feedback',     icon: Star,            label: 'Feedback'     },
 ];
 
 const staffLinks = [
