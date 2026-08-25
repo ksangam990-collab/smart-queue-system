@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
+import { avatarFallback } from '../../utils/avatar';
 
 const ROLE_FILTERS = ['all', 'customer', 'staff', 'admin'];
 
@@ -149,7 +150,7 @@ const ManageUsers = () => {
                             alt={user.name}
                             className="w-9 h-9 rounded-full object-cover"
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=5b5ff5&color=fff&size=36`;
+                              e.currentTarget.src = avatarFallback(user?.name, '5b5ff5', 36);
                             }}
                           />
                           <div>
