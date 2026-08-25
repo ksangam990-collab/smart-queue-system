@@ -360,3 +360,42 @@ export const uploadAvatar = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── Get my availability (staff) ─────────────────────────────
+export const getMyAvailability = async (req, res) => {
+  try {
+    const user = await (await import('../models/User.js')).default
+      .findById(req.user._id)
+      .select('availability');
+    return res.status(200).json({ success: true, data: user.availability });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── Update my availability (staff) ──────────────────────────
+export const updateMyAvailability = async (req, res) => {
+  try {
+    const { workingDays, offDates } = req.body;
+    const allowed = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+    if (workingDays && !workingDays.every(d => allowed.includes(d))) {
+      return res.status(400).json({ success: false, message: 'Invalid working day value.' });
+    }
+
+    const User = (await import('../models/User.js')).default;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { availability: { workingDays, offDates } },
+      { new: true, runValidators: true }
+    ).select('availability');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Availability updated.',
+      data: user.availability,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
