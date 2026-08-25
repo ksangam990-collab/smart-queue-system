@@ -4,6 +4,7 @@ import { Star, MessageSquare } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
+import { CardItemSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 
 const Feedback = () => {
@@ -57,7 +58,7 @@ const Feedback = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
+  if (loading) return <div className="space-y-4">{Array.from({length:3}).map((_,i)=><CardItemSkeleton key={i}/>)}</div>;
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
