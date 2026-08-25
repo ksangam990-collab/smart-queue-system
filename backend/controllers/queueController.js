@@ -9,7 +9,7 @@ import {
   getQueueAlertText,
 } from '../utils/sendEmail.js';
 
-const BASE_URL     = process.env.FRONTEND_URL || 'https://slotly.vercel.app';
+const BASE_URL     = process.env.FRONTEND_URL || 'https://slotly.ksangam.dpdns.org';
 // Alert patients who are this many positions away (2 = second in line)
 const ALERT_AT_POSITIONS = [2, 3];
 
