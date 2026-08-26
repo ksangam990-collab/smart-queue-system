@@ -274,7 +274,7 @@ const ManageStaff = () => {
                   >
                     <option value="">Select department (optional)</option>
                     {departments.map((d) => (
-                      <option key={d._id} value={d._1d}>
+                      <option key={d._id} value={d._id}>
                         {d.icon} {d.name}
                       </option>
                     ))}
@@ -328,8 +328,15 @@ const ManageStaff = () => {
               <h3 className="text-lg font-bold text-slate-800 mb-2">Delete Staff?</h3>
               <p className="text-slate-500 text-sm mb-6">This cannot be undone.</p>
               <div className="flex gap-3">
-                <button onClick={() => setDeleteId(null)} className="btn-secondary flex-1">
-                  Cancel
-                </button>
-                <button
-{
+                <button onClick={() => setDeleteId(null)} className="btn-secondary flex-1">Cancel</button>
+                <button onClick={() => handleDelete(deleteId)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl px-5 py-2.5 transition-all">Delete</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default ManageStaff;
