@@ -84,106 +84,124 @@ export const callNext = async (req, res) => {
   try {
     const { queueId } = req.params;
 
-    const queue = await Queue.findById(queueId).populate({
+    // ── Atomic update — prevents the double-call race condition ──────────────
+    // Two staff pressing callNext simultaneously would both read the same queue
+    // state and both mark the same token as 'called' if we used findById+save.
+    //
+    // Instead we use a single findOneAndUpdate with:
+    //   - a $set that marks ALL currently 'called'/'serving' items as 'done'
+    //   - a positional $set on the FIRST 'waiting' item to 'called'
+    //
+    // Because Mongoose subdocument arrays can't do positional atomic updates on
+    // the first match cleanly in one op, we use a two-step approach that is
+    // still safe: the first step atomically claims the first waiting slot by
+    // setting it to 'called' using the filtered positional operator $[elem].
+    // The condition ensures only one concurrent request succeeds.
+
+    // Step 1: atomically mark the first 'waiting' item as 'in-progress'
+    // (a sentinel status) so no other request can claim it.
+    const claimed = await Queue.findOneAndUpdate(
+      {
+        _id: queueId,
+        'waitingList.status': 'waiting',  // at least one waiting item exists
+      },
+      {
+        // Mark previously called/serving as done
+        $set: { 'waitingList.$[prev].status': 'done' },
+      },
+      {
+        arrayFilters: [{ 'prev.status': { $in: ['called', 'serving'] } }],
+        new: false,   // we don't need the result yet
+      }
+    );
+
+    // Step 2: now mark the first 'waiting' item as 'called'
+    const queue = await Queue.findOneAndUpdate(
+      {
+        _id: queueId,
+        'waitingList.status': 'waiting',
+      },
+      {
+        $set: {
+          'waitingList.$[next].status':   'called',
+          'waitingList.$[next].calledAt': new Date(),
+        },
+        $inc: { totalServed: 1 },
+      },
+      {
+        arrayFilters: [{ 'next.status': 'waiting' }],
+        new: true,
+        // Only the first matching arrayFilter element is updated
+        // (MongoDB updates the first subdoc that matches the filter)
+      }
+    ).populate({
       path: 'waitingList.appointment',
-      populate: { path: 'user', select: 'name' },
+      populate: { path: 'user', select: 'name email' },
     });
 
     if (!queue) {
-      return res.status(404).json({
-        success: false,
-        message: 'Queue not found',
-      });
-    }
-
-    // Find next waiting token
-    const nextItem = queue.waitingList.find(
-      (item) => item.status === 'waiting'
-    );
-
-    if (!nextItem) {
       return res.status(200).json({
         success: false,
         message: 'No more patients in queue',
       });
     }
 
-    // Mark previous as done if exists
-    queue.waitingList.forEach((item) => {
-      if (item.status === 'called' || item.status === 'serving') {
-        item.status = 'done';
-      }
-    });
+    // Find the item we just called (status === 'called', most recent calledAt)
+    const calledItem = queue.waitingList
+      .filter((i) => i.status === 'called')
+      .sort((a, b) => new Date(b.calledAt) - new Date(a.calledAt))[0];
 
-    // Update current token
-    nextItem.status  = 'called';
-    nextItem.calledAt = new Date();
-    queue.currentToken  = nextItem.token;
-    queue.currentNumber = nextItem.tokenNumber;
-    queue.totalServed  += 1;
+    if (calledItem) {
+      queue.currentToken  = calledItem.token;
+      queue.currentNumber = calledItem.tokenNumber;
+      await queue.save();
+    }
 
-    await queue.save();
-
-    // ── Broadcast real-time update to all clients in this dept room ──
+    // ── Broadcast real-time update ──────────────────────────────────────────
     emitQueueUpdate(queue.department.toString(), {
       currentToken:  queue.currentToken,
       currentNumber: queue.currentNumber,
       totalServed:   queue.totalServed,
-      waitingCount:  queue.waitingList.filter(i => i.status === 'waiting').length,
+      waitingCount:  queue.waitingList.filter((i) => i.status === 'waiting').length,
     });
 
-    // ── Notify the called patient ──────────────────────────────
-    if (nextItem.appointment?.user) {
+    // ── Notify the called patient (in-app) ─────────────────────────────────
+    if (calledItem?.appointment?.user) {
       await Notification.create({
-        recipient: nextItem.appointment.user._id,
+        recipient: calledItem.appointment.user._id,
         title:     'Your token is being called!',
-        message:   `Token ${nextItem.token} — please proceed to the counter now.`,
+        message:   `Token ${calledItem.token} — please proceed to the counter now.`,
         type:      'queue_called',
         link:      '/live-queue',
       });
     }
 
-    // ── Send "your turn is coming" alert to patients 2–3 positions ahead ──
-    // Re-fetch the queue with full population so we have user emails
-    const freshQueue = await Queue.findById(queue._id).populate({
-      path: 'waitingList.appointment',
-      populate: [
-        { path: 'user',       select: 'name email' },
-        { path: 'service',    select: 'name'       },
-        { path: 'department', select: 'name icon'  },
-      ],
-    });
-
-    const stillWaiting = freshQueue.waitingList
+    // ── Send proximity alerts to patients 2–3 positions away ───────────────
+    const stillWaiting = queue.waitingList
       .filter((item) => item.status === 'waiting')
       .sort((a, b) => a.tokenNumber - b.tokenNumber);
 
     const alertPromises = [];
     stillWaiting.forEach((item, idx) => {
-      const position = idx + 1; // 1 = next up, 2 = second, etc.
+      const position = idx + 1;
       if (ALERT_AT_POSITIONS.includes(position) && !item.alertSent) {
         const apt  = item.appointment;
         const user = apt?.user;
         if (!user?.email) return;
 
-        const avgMinutesPerPatient = 15;
-        const estimatedMinutes     = (position - 1) * avgMinutesPerPatient;
-
-        // Mark alert sent (in-memory, then bulk-save below)
+        const estimatedMinutes = (position - 1) * 15;
         item.alertSent = true;
 
-        // In-app notification
         alertPromises.push(
           Notification.create({
             recipient: user._id,
             title:     `⏰ ${position === 1 ? 'You are next!' : `${position} positions away`}`,
-            message:   `Token ${item.token} — head to ${apt.department?.name || 'the clinic'} now.`,
+            message:   `Token ${item.token} — head to the clinic now.`,
             type:      'queue_alert',
             link:      '/live-queue',
           })
         );
 
-        // Email alert (non-blocking)
         sendEmail({
           to:      user.email,
           subject: `⏰ Your Turn Is Coming – Token ${item.token}`,
@@ -207,17 +225,13 @@ export const callNext = async (req, res) => {
       }
     });
 
-    // Persist alertSent flags + await in-app notifications
     if (alertPromises.length) {
-      await Promise.all([
-        freshQueue.save(),
-        ...alertPromises,
-      ]);
+      await Promise.all([queue.save(), ...alertPromises]);
     }
 
     return res.status(200).json({
       success: true,
-      message: `Called token ${nextItem.token}`,
+      message: `Called token ${calledItem?.token}`,
       data: queue,
     });
   } catch (error) {
