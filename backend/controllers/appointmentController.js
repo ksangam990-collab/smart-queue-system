@@ -19,7 +19,10 @@ import {
   getAppointmentStatusText,
 } from "../utils/sendEmail.js";
 
-const BASE_URL = process.env.FRONTEND_URL || 'https://slotly.ksangam.dpdns.org';
+// Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
+// No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
+// email links should fail loudly rather than silently point to the wrong domain.
+const BASE_URL = process.env.CLIENT_URL;
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries

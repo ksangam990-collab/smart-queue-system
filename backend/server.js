@@ -1,6 +1,12 @@
 // backend/server.js
 
 import 'dotenv/config';
+import { validateEnv } from './config/validateEnv.js';
+
+// Fail fast if required env vars are missing — before any other imports
+// that might silently use undefined values.
+validateEnv();
+
 import http from 'http';
 import express from 'express';
 import cors from "cors";

@@ -10,7 +10,10 @@ import {
 } from '../utils/sendEmail.js';
 import { emitQueueUpdate } from '../socket.js';
 
-const BASE_URL     = process.env.FRONTEND_URL || 'https://slotly.ksangam.dpdns.org';
+// Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
+// No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
+// email links should fail loudly rather than silently point to the wrong domain.
+const BASE_URL = process.env.CLIENT_URL;
 // Alert patients who are this many positions away (2 = second in line)
 const ALERT_AT_POSITIONS = [2, 3];
 
