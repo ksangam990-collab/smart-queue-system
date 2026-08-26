@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -9,38 +9,45 @@ import { useTheme } from "./contexts/ThemeContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleRoute from "./routes/RoleRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
-import Profile from "./pages/Profile";
 
-// Auth pages
-import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail";
-import NotFound from "./pages/NotFound";
+// ── Route-level lazy imports ──────────────────────────────────────────────────
+// Each page chunk is only downloaded when the user first navigates to it.
+// Customers never download admin/staff bundles; admins never download customer
+// pages they don't visit. Reduces initial bundle size significantly.
 
-// Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageDepartments from "./pages/admin/ManageDepartments";
-import ManageStaff from "./pages/admin/ManageStaff";
-import ManageUsers from "./pages/admin/ManageUsers";
-import ManageAppointments from "./pages/admin/ManageAppointments";
-import Reports from "./pages/admin/Reports";
-import AdminFeedback from "./pages/admin/AdminFeedback";
+// Shared
+const Profile = lazy(() => import("./pages/Profile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Staff pages
-import StaffDashboard from "./pages/staff/StaffDashboard";
-import QueuePanel from "./pages/staff/QueuePanel";
-import Schedule from "./pages/staff/Schedule";
+// Public / auth
+const Home           = lazy(() => import("./pages/Home"));
+const Login          = lazy(() => import("./pages/auth/Login"));
+const Register       = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword  = lazy(() => import("./pages/auth/ResetPassword"));
+const VerifyEmail    = lazy(() => import("./pages/auth/VerifyEmail"));
 
-// Customer pages
-import CustomerDashboard from "./pages/customer/CustomerDashboard";
-import BookAppointment from "./pages/customer/BookAppointment";
-import MyAppointments from "./pages/customer/MyAppointments";
-import LiveQueue from "./pages/customer/LiveQueue";
-import FeedbackPage from "./pages/customer/Feedback";
-import Notifications from "./pages/customer/Notifications";
+// Admin
+const AdminDashboard     = lazy(() => import("./pages/admin/AdminDashboard"));
+const ManageDepartments  = lazy(() => import("./pages/admin/ManageDepartments"));
+const ManageStaff        = lazy(() => import("./pages/admin/ManageStaff"));
+const ManageUsers        = lazy(() => import("./pages/admin/ManageUsers"));
+const ManageAppointments = lazy(() => import("./pages/admin/ManageAppointments"));
+const Reports            = lazy(() => import("./pages/admin/Reports"));
+const AdminFeedback      = lazy(() => import("./pages/admin/AdminFeedback"));
+
+// Staff
+const StaffDashboard = lazy(() => import("./pages/staff/StaffDashboard"));
+const QueuePanel     = lazy(() => import("./pages/staff/QueuePanel"));
+const Schedule       = lazy(() => import("./pages/staff/Schedule"));
+
+// Customer
+const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
+const BookAppointment   = lazy(() => import("./pages/customer/BookAppointment"));
+const MyAppointments    = lazy(() => import("./pages/customer/MyAppointments"));
+const LiveQueue         = lazy(() => import("./pages/customer/LiveQueue"));
+const FeedbackPage      = lazy(() => import("./pages/customer/Feedback"));
+const Notifications     = lazy(() => import("./pages/customer/Notifications"));
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(
@@ -99,6 +106,10 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <ThemedToaster />
+        {/* Suspense is required for React.lazy — shows nothing while a page chunk loads.
+            The transition is instant on fast connections; on slow ones a brief blank
+            is acceptable. Add a skeleton fallback here if needed in future. */}
+        <Suspense fallback={null}>
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
@@ -156,6 +167,7 @@ const App = () => (
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </AuthProvider>
     </ThemeProvider>
   </BrowserRouter>
