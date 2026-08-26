@@ -47,7 +47,14 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
-app.use(morgan("dev"));
+// HTTP request logging — verbose 'dev' format locally, structured 'combined'
+// in production (compatible with log aggregators like Datadog / Render logs).
+// Never run 'dev' in production: it emits ANSI colours and wastes log bytes.
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
 app.use(generalLimiter);
 
 app.get("/api/health", (req, res) => {
