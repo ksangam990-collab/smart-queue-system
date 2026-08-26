@@ -76,11 +76,21 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Logged out successfully');
+  const logout = useCallback(async () => {
+    try {
+      // Must call the backend so the HTTP-only cookie is cleared server-side.
+      // Without this the cookie persists and the user remains authenticated
+      // to any request that relies on cookie auth.
+      await api.post('/auth/logout');
+    } catch {
+      // Network failure — clear local state anyway so the UI reflects logout.
+      // The cookie will expire naturally via its maxAge.
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      toast.success('Logged out successfully');
+    }
   }, []);
 
   const updateUser = useCallback((updatedData) => {
