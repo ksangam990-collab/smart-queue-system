@@ -407,10 +407,29 @@ export const getAppointment = async (req, res) => {
   }
 };
 
+// Valid status values and the transitions allowed from each state.
+// Staff/admin can only move appointments forward, never reopen completed ones.
+const ALLOWED_TRANSITIONS = {
+  pending:   ['confirmed', 'cancelled', 'no-show'],
+  confirmed: ['completed', 'cancelled', 'no-show'],
+  completed: [],   // terminal — no further changes
+  cancelled: [],   // terminal
+  'no-show': [],   // terminal
+};
+
 // ─── Update appointment status (admin/staff) ──────────────────
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { status, cancelReason } = req.body;
+
+    // Validate incoming status against the enum allowlist
+    const validStatuses = Object.keys(ALLOWED_TRANSITIONS);
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed values: ${validStatuses.join(', ')}`,
+      });
+    }
 
     const appointment = await Appointment.findById(req.params.id);
 
@@ -418,6 +437,15 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Appointment not found",
+      });
+    }
+
+    // Enforce state-machine transitions — prevent reopening terminal states
+    const allowedNext = ALLOWED_TRANSITIONS[appointment.status] ?? [];
+    if (!allowedNext.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot transition from '${appointment.status}' to '${status}'.`,
       });
     }
 
