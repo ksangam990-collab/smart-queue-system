@@ -1,6 +1,7 @@
 // backend/models/Appointment.js
 
 import mongoose from "mongoose";
+import { randomBytes } from "crypto";
 
 const appointmentSchema = new mongoose.Schema(
   {
@@ -69,7 +70,8 @@ const appointmentSchema = new mongoose.Schema(
 appointmentSchema.pre("save", function (next) {
   if (!this.bookingReference) {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+    // 3 random bytes → 6-char uppercase hex. Cryptographically secure unlike Math.random().
+    const random = randomBytes(3).toString("hex").toUpperCase();
     this.bookingReference = `SQ-${date}-${random}`;
   }
   if (typeof next === "function") next();

@@ -3,6 +3,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 
 const userSchema = new mongoose.Schema(
   {
@@ -100,7 +101,8 @@ userSchema.methods.generateToken = function () {
 
 // ─── Generate email verification token ───────────────────────
 userSchema.methods.generateVerificationToken = function () {
-  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  // 32 random bytes → 64-char hex string. Cryptographically secure unlike Math.random().
+  const token = randomBytes(32).toString('hex');
   this.emailVerificationToken  = token;
   this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
   return token;
@@ -108,10 +110,16 @@ userSchema.methods.generateVerificationToken = function () {
 
 // ─── Generate password reset token ───────────────────────────
 userSchema.methods.generateResetToken = function () {
-  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  // 32 random bytes → 64-char hex string. Cryptographically secure unlike Math.random().
+  const token = randomBytes(32).toString('hex');
   this.resetPasswordToken  = token;
   this.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
   return token;
 };
+
+// Sparse indexes on token fields — queried on every verify/reset request.
+// Sparse so null/undefined entries (the common case) are excluded from the index.
+userSchema.index({ resetPasswordToken: 1 },       { sparse: true });
+userSchema.index({ emailVerificationToken: 1 },   { sparse: true });
 
 export default mongoose.model('User', userSchema);
