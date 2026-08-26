@@ -2,6 +2,7 @@
 
 import Service    from '../models/Service.js';
 import Department from '../models/Department.js';
+import { safeRegex } from '../utils/escapeRegex.js';
 
 // ─── Get all services ─────────────────────────────────────────
 export const getServices = async (req, res) => {
@@ -10,7 +11,7 @@ export const getServices = async (req, res) => {
 
     const filter = {};
     if (department) filter.department = department;
-    if (search)     filter.name       = { $regex: search, $options: 'i' };
+    if (search)     filter.name       = safeRegex(search);
     if (isActive)   filter.isActive   = isActive === 'true';
 
     const services = await Service.find(filter)

@@ -9,6 +9,7 @@ import {
   generateQueueToken,
   generateTimeSlots,
 } from "../utils/generateQueueToken.js";
+import { safeRegex } from "../utils/escapeRegex.js";
 import {
   sendEmail,
   getBookingConfirmationHTML,
@@ -333,7 +334,7 @@ export const getAllAppointments = async (req, res) => {
     // This means pagination is always correct — we never filter post-fetch.
     if (search) {
       const User = (await import('../models/User.js')).default;
-      const searchRegex = new RegExp(search, 'i');
+      const searchRegex = safeRegex(search);   // escape to prevent ReDoS
 
       // Find users whose name or email matches
       const matchingUsers = await User.find({

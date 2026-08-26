@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
+import { safeRegex } from "../utils/escapeRegex.js";
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
@@ -21,9 +22,10 @@ export const getUsers = async (req, res) => {
     if (role) filter.role = role;
     if (isActive) filter.isActive = isActive === "true";
     if (search) {
+      const re = safeRegex(search);
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name:  re },
+        { email: re },
       ];
     }
 
