@@ -60,24 +60,34 @@ export const getMyFeedback = async (req, res) => {
 
 export const getAllFeedback = async (req, res) => {
   try {
-    const { department, rating } = req.query;
+    const { department, rating, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (department) filter.department = department;
-    if (rating) filter.rating = rating;
+    if (rating)     filter.rating     = Number(rating);
 
-    const feedback = await Feedback.find(filter)
-      .populate('user', 'name avatar')
-      .populate('department', 'name icon')
-      .populate('service', 'name')
-      .sort({ createdAt: -1 });
+    const [total, feedback, ratingAgg] = await Promise.all([
+      Feedback.countDocuments(filter),
+      Feedback.find(filter)
+        .populate('user', 'name avatar')
+        .populate('department', 'name icon')
+        .populate('service', 'name')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit)),
+      // Compute average over ALL matching docs, not just this page
+      Feedback.aggregate([
+        { $match: filter },
+        { $group: { _id: null, avg: { $avg: '$rating' } } },
+      ]),
+    ]);
 
-    const avgRating = feedback.length
-      ? (feedback.reduce((sum, f) => sum + f.rating, 0) / feedback.length).toFixed(1)
-      : 0;
+    const avgRating = ratingAgg[0] ? ratingAgg[0].avg.toFixed(1) : '0.0';
 
     return res.status(200).json({
       success: true,
       count: feedback.length,
+      total,
+      pages: Math.ceil(total / limit),
       avgRating,
       data: feedback,
     });
@@ -88,15 +98,22 @@ export const getAllFeedback = async (req, res) => {
 
 export const getCompletedAppointmentsForFeedback = async (req, res) => {
   try {
-    const appointments = await Appointment.find({
+    // Get IDs of appointments already reviewed in a single fast query
+    const feedbackGiven = await Feedback.find({ user: req.user._id }).select('appointment');
+    const givenIds = feedbackGiven.map((f) => f.appointment);
+
+    // Fetch only the appointments not yet reviewed, with a sensible cap.
+    // Without a limit this returns every completed appointment ever, which
+    // grows unboundedly and can OOM the server for active users.
+    const pending = await Appointment.find({
       user: req.user._id,
       status: 'completed',
-    }).populate('department', 'name icon').populate('service', 'name');
-
-    const feedbackGiven = await Feedback.find({ user: req.user._id }).select('appointment');
-    const givenIds = feedbackGiven.map((f) => f.appointment.toString());
-
-    const pending = appointments.filter((a) => !givenIds.includes(a._id.toString()));
+      _id: { $nin: givenIds },
+    })
+      .populate('department', 'name icon')
+      .populate('service', 'name')
+      .sort({ date: -1 })
+      .limit(50);
 
     return res.status(200).json({ success: true, data: pending });
   } catch (error) {
