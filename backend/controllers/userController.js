@@ -287,29 +287,38 @@ export const getDashboardStats = async (req, res) => {
       Department.countDocuments({ isActive: true }),
     ]);
 
-    // Weekly data for charts
-    const weeklyData = await Promise.all(
-      Array.from({ length: 7 }, async (_, i) => {
-        const d = new Date(getISTDateString());
-        d.setDate(d.getDate() - (6 - i));
-        const start = new Date(d).setHours(0, 0, 0, 0);
-        const end = new Date(d).setHours(23, 59, 59, 999);
+    // Weekly data for charts — single aggregation instead of 14 countDocuments
+    const sevenDaysAgo = new Date(getISTDateString());
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
-        const [bookings, completed] = await Promise.all([
-          Appointment.countDocuments({ date: { $gte: start, $lte: end } }),
-          Appointment.countDocuments({
-            date: { $gte: start, $lte: end },
-            status: "completed",
-          }),
-        ]);
+    const weeklyRaw = await Appointment.aggregate([
+      { $match: { date: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$date', timezone: 'Asia/Kolkata' },
+          },
+          bookings:  { $sum: 1 },
+          completed: {
+            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] },
+          },
+        },
+      },
+    ]);
 
-        return {
-          day: d.toLocaleDateString("en-US", { weekday: "short" }),
-          bookings,
-          completed,
-        };
-      }),
-    );
+    // Build a full 7-day array (fill gaps where no appointments exist)
+    const weeklyMap = Object.fromEntries(weeklyRaw.map((r) => [r._id, r]));
+    const weeklyData = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(getISTDateString());
+      d.setDate(d.getDate() - (6 - i));
+      const key = d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      return {
+        day:       d.toLocaleDateString('en-US', { weekday: 'short' }),
+        bookings:  weeklyMap[key]?.bookings  ?? 0,
+        completed: weeklyMap[key]?.completed ?? 0,
+      };
+    });
 
     return res.status(200).json({
       success: true,
@@ -451,21 +460,33 @@ export const getRangedStats = async (req, res) => {
       cur.setDate(cur.getDate() + 1);
     }
 
-    // Department breakdown (only when no department filter)
+    // Department breakdown — single aggregation instead of N countDocuments
     let deptBreakdown = [];
     if (!department) {
-      const depts = await Department.find({ isActive: true }).select('name icon color');
-      deptBreakdown = await Promise.all(
-        depts.map(async (d) => {
-          const count = await Appointment.countDocuments({
-            ...baseFilter,
-            department: d._id,
-          });
-          return { name: d.name, icon: d.icon, count };
-        })
-      );
-      deptBreakdown = deptBreakdown.filter((d) => d.count > 0)
-        .sort((a, b) => b.count - a.count);
+      const deptAgg = await Appointment.aggregate([
+        { $match: baseFilter },
+        { $group: { _id: '$department', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        {
+          $lookup: {
+            from: 'departments',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'dept',
+          },
+        },
+        { $unwind: '$dept' },
+        { $match: { 'dept.isActive': true } },
+        {
+          $project: {
+            _id: 0,
+            name:  '$dept.name',
+            icon:  '$dept.icon',
+            count: 1,
+          },
+        },
+      ]);
+      deptBreakdown = deptAgg;
     }
 
     return res.status(200).json({
