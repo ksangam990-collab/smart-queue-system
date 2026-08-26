@@ -1,3 +1,8 @@
+# Environment variables — never commit real values
+.env
+.env.*
+!.env.example
+
 # Logs
 logs
 *.log
