@@ -26,6 +26,7 @@ const notificationSchema = new mongoose.Schema(
         'appointment_cancelled',
         'appointment_reminder',
         'queue_called',
+        'queue_alert',    // "your turn is coming" proximity alert (2–3 positions away)
         'queue_update',
         'general',
       ],
