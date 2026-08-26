@@ -133,75 +133,97 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    // Check slot is not already taken
-    const slotTaken = await Appointment.findOne({
-      service: serviceId,
-      date: {
-        $gte: new Date(date).setHours(0, 0, 0, 0),
-        $lte: new Date(date).setHours(23, 59, 59, 999),
-      },
-      "timeSlot.start": timeSlot.start,
-      status: { $in: ["pending", "confirmed"] },
-    });
+    // ── Atomic slot reservation ───────────────────────────────────────────────
+    // Without a transaction, two concurrent requests for the same slot can both
+    // pass the "slot taken" check and both create appointments — classic TOCTOU
+    // race. We wrap the check + create in a MongoDB session so only one succeeds.
+    const mongoose = await import('mongoose');
+    const session = await mongoose.default.startSession();
 
-    if (slotTaken) {
-      return res.status(400).json({
-        success: false,
-        message: "This time slot is already booked. Please choose another.",
+    let appointment;
+    let token, tokenNumber, queueId;
+
+    try {
+      await session.withTransaction(async () => {
+        // Re-check slot inside the transaction
+        const slotTaken = await Appointment.findOne({
+          service: serviceId,
+          date: {
+            $gte: new Date(date).setHours(0, 0, 0, 0),
+            $lte: new Date(date).setHours(23, 59, 59, 999),
+          },
+          "timeSlot.start": timeSlot.start,
+          status: { $in: ["pending", "confirmed"] },
+        }).session(session);
+
+        if (slotTaken) {
+          // Throwing inside withTransaction automatically aborts the session
+          const err = new Error("This time slot is already booked. Please choose another.");
+          err.statusCode = 400;
+          throw err;
+        }
+
+        // Check user doesn't already have appointment same day same dept
+        const existingBooking = await Appointment.findOne({
+          user: userId,
+          department: departmentId,
+          date: {
+            $gte: new Date(date).setHours(0, 0, 0, 0),
+            $lte: new Date(date).setHours(23, 59, 59, 999),
+          },
+          status: { $in: ["pending", "confirmed"] },
+        }).session(session);
+
+        if (existingBooking) {
+          const err = new Error("You already have an appointment in this department on this date.");
+          err.statusCode = 400;
+          throw err;
+        }
+
+        // Generate queue token (its own atomic findOneAndUpdate — safe inside session)
+        ({ token, tokenNumber, queueId } = await generateQueueToken(departmentId, date));
+
+        // Create appointment — the unique index on (department, date, queueToken)
+        // acts as a last-resort guard if two requests somehow get the same token.
+        [appointment] = await Appointment.create(
+          [{
+            user: userId,
+            department: departmentId,
+            service: serviceId,
+            date: new Date(date),
+            timeSlot,
+            notes,
+            queueToken: token,
+            queueNumber: tokenNumber,
+            status: "confirmed",
+            fee: service.fee,
+          }],
+          { session }
+        );
+
+        // Add to queue waiting list within the same transaction
+        await Queue.findByIdAndUpdate(
+          queueId,
+          {
+            $push: {
+              waitingList: {
+                appointment: appointment._id,
+                token,
+                tokenNumber,
+                status: "waiting",
+              },
+            },
+          },
+          { session }
+        );
       });
+    } catch (txError) {
+      session.endSession();
+      if (txError.statusCode === 400) {
+        return res.status(400).json({ success: false, message: txError.message });
+      }
+      throw txError; // re-throw unexpected errors to the outer catch
     }
-
-    // Check user doesn't already have appointment same day same dept
-    const existingBooking = await Appointment.findOne({
-      user: userId,
-      department: departmentId,
-      date: {
-        $gte: new Date(date).setHours(0, 0, 0, 0),
-        $lte: new Date(date).setHours(23, 59, 59, 999),
-      },
-      status: { $in: ["pending", "confirmed"] },
-    });
-
-    if (existingBooking) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "You already have an appointment in this department on this date.",
-      });
-    }
-
-    // Generate queue token
-    const { token, tokenNumber, queueId } = await generateQueueToken(
-      departmentId,
-      date,
-    );
-
-    // Create appointment
-    const appointment = await Appointment.create({
-      user: userId,
-      department: departmentId,
-      service: serviceId,
-      date: new Date(date),
-      timeSlot,
-      notes,
-      queueToken: token,
-      queueNumber: tokenNumber,
-      status: "confirmed",
-      fee: service.fee,
-    });
-
-    // Add the new appointment to today's queue waiting list so staff can
-    // see it in the Queue Panel and customers can track their position.
-    await Queue.findByIdAndUpdate(queueId, {
-      $push: {
-        waitingList: {
-          appointment: appointment._id,
-          token,
-          tokenNumber,
-          status: "waiting",
-        },
-      },
-    });
 
     await appointment.populate([
       { path: "department", select: "name icon color" },
