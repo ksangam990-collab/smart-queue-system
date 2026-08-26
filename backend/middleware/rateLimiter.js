@@ -67,3 +67,19 @@ export const resendVerificationLimiter = emailLimiter({
   message:
     'Too many verification emails requested for this address. Please wait 30 minutes, and check your inbox (and spam folder) before requesting another.',
 });
+
+// Max 5 reset-password attempts per token per 15 minutes (keyed by IP).
+// The forgotPassword route already limits how many reset emails can be sent.
+// This limiter protects the token-consumption endpoint from brute-force —
+// especially important while tokens are short (they were Math.random()-based;
+// now crypto.randomBytes but still worth guarding the endpoint).
+export const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many password reset attempts. Please request a new reset link.',
+  },
+});
