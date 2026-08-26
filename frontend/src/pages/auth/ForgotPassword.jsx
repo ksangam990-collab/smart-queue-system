@@ -57,13 +57,14 @@ const ForgotPassword = () => {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div>
-                <label className="form-label">Email address</label>
+                <label htmlFor="fp-email" className="form-label">Email address</label>
                 <div className="relative">
                   <Mail
                     size={16}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
+                    id="fp-email"
                     type="email"
                     placeholder="you@example.com"
                     data-cursor="hover"

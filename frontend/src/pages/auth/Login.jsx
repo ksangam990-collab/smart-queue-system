@@ -145,13 +145,14 @@ const Login = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email */}
               <div>
-                <label className="form-label">Email address</label>
+                <label htmlFor="login-email" className="form-label">Email address</label>
                 <div className="relative">
                   <Mail
                     size={17}
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
+                    id="login-email"
                     type="email"
                     placeholder="you@example.com"
                     data-cursor="hover"
@@ -171,7 +172,7 @@ const Login = () => {
               {/* Password */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="form-label mb-0">Password</label>
+                  <label htmlFor="login-password" className="form-label mb-0">Password</label>
                   <Link
                     to="/forgot-password"
                     data-cursor="hover"
@@ -186,6 +187,7 @@ const Login = () => {
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
+                    id="login-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     data-cursor="hover"

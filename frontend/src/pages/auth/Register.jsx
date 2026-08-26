@@ -146,10 +146,11 @@ const Register = () => {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label className="form-label">Full name</label>
+                  <label htmlFor="reg-name" className="form-label">Full name</label>
                   <div className="relative">
                     <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="reg-name"
                       type="text"
                       placeholder="John Doe"
                       data-cursor="hover"
@@ -165,10 +166,11 @@ const Register = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="form-label">Email address</label>
+                  <label htmlFor="reg-email" className="form-label">Email address</label>
                   <div className="relative">
                     <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="reg-email"
                       type="email"
                       placeholder="you@example.com"
                       data-cursor="hover"
@@ -184,10 +186,11 @@ const Register = () => {
 
                 {/* Phone */}
                 <div>
-                  <label className="form-label">Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <label htmlFor="reg-phone" className="form-label">Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
                   <div className="relative">
                     <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="reg-phone"
                       type="tel"
                       placeholder="+91 98765 43210"
                       data-cursor="hover"
@@ -199,10 +202,11 @@ const Register = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="form-label">Password</label>
+                  <label htmlFor="reg-password" className="form-label">Password</label>
                   <div className="relative">
                     <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="reg-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Min. 6 characters"
                       data-cursor="hover"
@@ -226,10 +230,11 @@ const Register = () => {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="form-label">Confirm password</label>
+                  <label htmlFor="reg-confirm-password" className="form-label">Confirm password</label>
                   <div className="relative">
                     <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="reg-confirm-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Repeat your password"
                       data-cursor="hover"
