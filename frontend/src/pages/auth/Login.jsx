@@ -243,13 +243,13 @@ const Login = () => {
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
               <p className="text-center text-xs text-slate-400 dark:text-slate-500">
-                <a href="/terms" className="hover:text-primary-500 transition-colors">
+                <Link to="/terms" className="hover:text-primary-500 transition-colors">
                   Terms
-                </a>
+                </Link>
                 <span className="mx-2">·</span>
-                <a href="/privacy" className="hover:text-primary-500 transition-colors">
+                <Link to="/privacy" className="hover:text-primary-500 transition-colors">
                   Privacy
-                </a>
+                </Link>
                 <span className="mx-2">·</span>
                 © {new Date().getFullYear()} Slotly
               </p>
