@@ -320,6 +320,48 @@ export const getDashboardStats = async (req, res) => {
       };
     });
 
+    // Monthly user growth — last 7 months, one aggregation
+    const sevenMonthsAgo = new Date();
+    sevenMonthsAgo.setMonth(sevenMonthsAgo.getMonth() - 6);
+    sevenMonthsAgo.setDate(1);
+    sevenMonthsAgo.setHours(0, 0, 0, 0);
+
+    const userGrowthRaw = await User.aggregate([
+      { $match: { role: 'customer', createdAt: { $gte: sevenMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year:  { $year:  '$createdAt' },
+            month: { $month: '$createdAt' },
+          },
+          users: { $sum: 1 },
+        },
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+    ]);
+
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const userGrowthData = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (6 - i));
+      const match = userGrowthRaw.find(
+        (r) => r._id.year === d.getFullYear() && r._id.month === d.getMonth() + 1
+      );
+      return {
+        month: MONTH_NAMES[d.getMonth()],
+        users: match?.users ?? 0,
+      };
+    });
+
+    // Recent appointments — last 5 from today for the dashboard table
+    const recentAppointments = await Appointment.find({
+      date: { $gte: startOfDay, $lte: endOfDay },
+    })
+      .populate('user',    'name')
+      .populate('service', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
     return res.status(200).json({
       success: true,
       data: {
@@ -332,6 +374,8 @@ export const getDashboardStats = async (req, res) => {
         monthlyAppointments,
         totalDepartments,
         weeklyData,
+        userGrowthData,
+        recentAppointments,
       },
     });
   } catch (error) {
