@@ -14,6 +14,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./config/db.js";
+import { startNoShowDetector } from "./jobs/noShowDetector.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { initSocket } from "./socket.js";
@@ -91,4 +92,7 @@ server.listen(PORT, () => {
       : `http://localhost:${PORT}`;
   console.log(`📡 API:    ${baseUrl}/api/health`);
   console.log(`🔌 Socket: ws://localhost:${PORT}\n`);
+
+  // Start background jobs after server is ready
+  startNoShowDetector();
 });
