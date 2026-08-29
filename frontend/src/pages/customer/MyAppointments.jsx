@@ -1,7 +1,7 @@
 // frontend/src/pages/customer/MyAppointments.jsx
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, X, RefreshCw, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -11,6 +11,7 @@ import Spinner from '../../components/common/Spinner';
 import { AppointmentsSkeleton } from '../../components/common/Skeleton';
 import MagneticButton from '../../components/home/MagneticButton';
 import QRCode from 'react-qr-code';
+import RescheduleModal from '../../components/common/RescheduleModal';
 
 const statusVariant = {
   completed: 'success',
@@ -30,6 +31,7 @@ const MyAppointments = () => {
   const [cancelId, setCancelId]         = useState(null);
   const [showQR, setShowQR]             = useState(null);
   const [cancelling, setCancelling]     = useState(false);
+  const [rescheduleApt, setRescheduleApt] = useState(null);
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -185,22 +187,28 @@ const MyAppointments = () => {
 
               {/* Actions */}
               {['pending', 'confirmed'].includes(apt.status) && (
-                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex-wrap">
                   <button
                     onClick={() => navigate('/live-queue')}
-                    className="flex items-center gap-1.5 text-xs text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-xl transition-all font-medium"
+                    className="flex items-center gap-1.5 text-xs text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 px-3 py-2 rounded-xl transition-all font-medium"
                   >
                     <Zap size={12} /> Track Queue
                   </button>
                   <button
+                    onClick={() => setRescheduleApt(apt)}
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 px-3 py-2 rounded-xl transition-all font-medium"
+                  >
+                    <RefreshCw size={12} /> Reschedule
+                  </button>
+                  <button
                     onClick={() => setShowQR(apt)}
-                    className="flex items-center gap-1.5 text-xs text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition-all font-medium"
+                    className="flex items-center gap-1.5 text-xs text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 px-3 py-2 rounded-xl transition-all font-medium"
                   >
                     QR Code
                   </button>
                   <button
                     onClick={() => setCancelId(apt._id)}
-                    className="flex items-center gap-1.5 text-xs text-red-500 hover:bg-red-50 px-3 py-2 rounded-xl transition-all font-medium"
+                    className="flex items-center gap-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 px-3 py-2 rounded-xl transition-all font-medium"
                   >
                     <X size={12} /> Cancel
                   </button>
@@ -210,6 +218,17 @@ const MyAppointments = () => {
           ))}
         </div>
       )}
+
+      {/* Reschedule modal */}
+      <AnimatePresence>
+        {rescheduleApt && (
+          <RescheduleModal
+            appointment={rescheduleApt}
+            onClose={() => setRescheduleApt(null)}
+            onSuccess={fetchAppointments}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Cancel confirmation modal */}
       {cancelId && (

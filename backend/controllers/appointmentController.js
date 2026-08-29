@@ -534,8 +534,133 @@ export const updateAppointmentStatus = async (req, res) => {
   }
 };
 
-// ─── Cancel appointment (customer) ───────────────────────────
-export const cancelAppointment = async (req, res) => {
+// ─── Reschedule appointment (customer) ───────────────────────
+export const rescheduleAppointment = async (req, res) => {
+  try {
+    const { date, timeSlot } = req.body;
+
+    if (!date || !timeSlot?.start || !timeSlot?.end) {
+      return res.status(400).json({
+        success: false,
+        message: 'New date and time slot are required.',
+      });
+    }
+
+    // Only the owner can reschedule
+    const appointment = await Appointment.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+
+    if (!['pending', 'confirmed'].includes(appointment.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Only pending or confirmed appointments can be rescheduled.',
+      });
+    }
+
+    // Check the new slot is not already taken (exclude this appointment)
+    const slotTaken = await Appointment.findOne({
+      _id:      { $ne: appointment._id },
+      service:  appointment.service,
+      date: {
+        $gte: new Date(date).setHours(0, 0, 0, 0),
+        $lte: new Date(date).setHours(23, 59, 59, 999),
+      },
+      'timeSlot.start': timeSlot.start,
+      status: { $in: ['pending', 'confirmed'] },
+    });
+
+    if (slotTaken) {
+      return res.status(400).json({
+        success: false,
+        message: 'That time slot is already booked. Please choose another.',
+      });
+    }
+
+    // Remove from old queue waiting list
+    await Queue.updateOne(
+      { department: appointment.department, date: appointment.date },
+      { $pull: { waitingList: { appointment: appointment._id } } }
+    );
+
+    // Update the appointment
+    const oldDate     = appointment.date;
+    const oldTimeSlot = { ...appointment.timeSlot };
+
+    appointment.date     = new Date(date);
+    appointment.timeSlot = timeSlot;
+    appointment.status   = 'confirmed'; // re-confirm on reschedule
+    await appointment.save();
+
+    // Generate new queue token for the new date/dept
+    const { token, tokenNumber, queueId } = await generateQueueToken(
+      appointment.department,
+      date,
+    );
+    appointment.queueToken  = token;
+    appointment.queueNumber = tokenNumber;
+    await appointment.save();
+
+    // Add to new queue
+    await Queue.findByIdAndUpdate(queueId, {
+      $push: {
+        waitingList: {
+          appointment: appointment._id,
+          token,
+          tokenNumber,
+          status: 'waiting',
+        },
+      },
+    });
+
+    // Populate for email + response
+    await appointment.populate([
+      { path: 'user',       select: 'name email' },
+      { path: 'service',    select: 'name' },
+      { path: 'department', select: 'name icon' },
+    ]);
+
+    // In-app notification
+    await Notification.create({
+      recipient: appointment.user._id,
+      title:     '📅 Appointment Rescheduled',
+      message:   `Your appointment for ${appointment.service?.name} has been moved to ${new Date(date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} at ${timeSlot.start}.`,
+      type:      'appointment_confirmed',
+      link:      '/my-appointments',
+    });
+
+    // Confirmation email (non-blocking)
+    sendEmail({
+      to:      appointment.user.email,
+      subject: `📅 Appointment Rescheduled – ${appointment.service?.name}`,
+      html: getBookingConfirmationHTML({
+        name: appointment.user.name,
+        appointment,
+        baseUrl: BASE_URL,
+      }),
+      text: getBookingConfirmationText({
+        name: appointment.user.name,
+        appointment,
+        baseUrl: BASE_URL,
+      }),
+    }).catch((err) =>
+      console.error('[rescheduleAppointment] Email failed:', err.message)
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Appointment rescheduled successfully.',
+      data: appointment,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}; = async (req, res) => {
   try {
     const appointment = await Appointment.findOne({
       _id: req.params.id,

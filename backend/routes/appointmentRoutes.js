@@ -8,6 +8,7 @@ import {
   getAppointment,
   updateAppointmentStatus,
   cancelAppointment,
+  rescheduleAppointment,
   getAvailableSlots,
   getTodayAppointments,
   getAnalytics,
@@ -31,7 +32,8 @@ router.get('/today', authorize('admin', 'staff'), getTodayAppointments);
 // Customer routes
 router.post('/',            authorize('customer'), bookAppointment);
 router.get('/my',           authorize('customer'), getMyAppointments);
-router.patch('/:id/cancel', authorize('customer'), cancelAppointment);
+router.patch('/:id/cancel',      authorize('customer'), cancelAppointment);
+router.patch('/:id/reschedule',  authorize('customer'), rescheduleAppointment);
 
 // Admin/Staff routes
 router.get('/',             authorize('admin', 'staff'), getAllAppointments);
