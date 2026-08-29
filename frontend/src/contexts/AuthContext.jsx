@@ -50,9 +50,13 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back, ${data.data.user.name}!`);
       return { success: true, role: data.data.user.role };
     } catch (error) {
-      const msg = error.response?.data?.message || 'Login failed';
-      toast.error(msg);
-      return { success: false };
+      const code  = error.response?.data?.code;
+      const msg   = error.response?.data?.message || 'Login failed';
+      const email = error.response?.data?.email;
+      // Don't show a generic toast for EMAIL_NOT_VERIFIED —
+      // the dedicated page handles its own messaging.
+      if (code !== 'EMAIL_NOT_VERIFIED') toast.error(msg);
+      return { success: false, code, email };
     } finally {
       setLoading(false);
     }

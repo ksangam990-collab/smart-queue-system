@@ -128,6 +128,18 @@ export const login = async (req, res) => {
       });
     }
 
+    // Block unverified customers from logging in — return a specific code
+    // so the frontend can show a dedicated "verify your email" screen with
+    // a resend button, instead of a generic error toast.
+    if (!user.isVerified && user.role === 'customer') {
+      return res.status(403).json({
+        success: false,
+        code:    'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email before logging in.',
+        email:   user.email,
+      });
+    }
+
     // Update last login
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });

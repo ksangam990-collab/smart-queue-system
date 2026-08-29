@@ -28,6 +28,7 @@ const Register       = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword  = lazy(() => import("./pages/auth/ResetPassword"));
 const VerifyEmail    = lazy(() => import("./pages/auth/VerifyEmail"));
+const EmailNotVerified = lazy(() => import("./pages/auth/EmailNotVerified"));
 
 // Admin
 const AdminDashboard     = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -119,6 +120,7 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/verify-pending" element={<EmailNotVerified />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmail />} />

@@ -35,7 +35,10 @@ const Login = () => {
   const onSubmit = async (data) => {
     const result = await login(data.email, data.password);
     if (result.success) {
-      navigate(ROLE_HOME[result.role] || "/dashboard");
+      navigate(ROLE_HOME[result.role] || '/dashboard');
+    } else if (result.code === 'EMAIL_NOT_VERIFIED') {
+      // Redirect to dedicated page so user can resend verification email
+      navigate('/verify-pending', { state: { email: result.email || data.email } });
     }
   };
 
