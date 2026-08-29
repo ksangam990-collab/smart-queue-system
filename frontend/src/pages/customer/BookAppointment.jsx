@@ -2,7 +2,7 @@
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,13 +14,38 @@ import {
   ChevronLeft,
   Clock,
   Zap,
+  Download,
+  QrCode,
 } from "lucide-react";
+import QRCode from "react-qr-code";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import Spinner from "../../components/common/Spinner";
 import MagneticButton from "../../components/home/MagneticButton";
 
 const STEPS = ["Department", "Service", "Date & Time", "Confirm"];
+
+// Download the QR code as a PNG image
+const downloadQR = (bookingRef) => {
+  const svg   = document.getElementById('booking-qr-svg');
+  if (!svg) return;
+  const svgData  = new XMLSerializer().serializeToString(svg);
+  const canvas   = document.createElement('canvas');
+  canvas.width   = 256;
+  canvas.height  = 256;
+  const ctx      = canvas.getContext('2d');
+  const img      = new Image();
+  img.onload = () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.drawImage(img, 0, 0, 256, 256);
+    const link   = document.createElement('a');
+    link.download = `slotly-${bookingRef}.png`;
+    link.href     = canvas.toDataURL('image/png');
+    link.click();
+  };
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+};
 
 const BookAppointment = () => {
   const navigate = useNavigate();
@@ -126,56 +151,92 @@ const BookAppointment = () => {
     return true;
   };
 
-  // ── Success screen ──────────────────────────────────────────
+  // ── Success / Confirmation screen ──────────────────────────
   if (step === 4 && confirmed) {
     return (
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="dash-card p-8 text-center"
+          className="dash-card p-8"
         >
-          <motion.div
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-            className="relative w-20 h-20 rounded-full bg-accent-500/10 flex items-center justify-center mx-auto mb-6"
-          >
-            <span className="absolute inset-0 rounded-full border-2 border-accent-400 animate-pulse-soft" />
-            <CheckCircle size={40} className="text-accent-500" />
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="text-2xl font-bold text-slate-800 mb-2"
-          >
-            Booking Confirmed!
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-slate-500 mb-8"
-          >
-            Your appointment has been booked successfully.
-          </motion.p>
+          {/* ── Check icon ───────────────────────────────────────── */}
+          <div className="text-center mb-6">
+            <motion.div
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+              className="relative w-20 h-20 rounded-full bg-accent-500/10 flex items-center justify-center mx-auto mb-4"
+            >
+              <span className="absolute inset-0 rounded-full border-2 border-accent-400 animate-pulse-soft" />
+              <CheckCircle size={40} className="text-accent-500" />
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="text-2xl font-bold text-slate-800 dark:text-white mb-1"
+            >
+              Booking Confirmed!
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-slate-500 dark:text-slate-400 text-sm"
+            >
+              A confirmation email has been sent to you.
+            </motion.p>
+          </div>
 
-          {/* Token */}
+          {/* ── Token ────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-primary-50 border-2 border-primary-200 rounded-2xl p-6 mb-6"
+            transition={{ delay: 0.35 }}
+            className="bg-primary-50 dark:bg-primary-500/10 border-2 border-primary-200 dark:border-primary-500/30 rounded-2xl p-4 mb-5 text-center"
           >
-            <p className="text-sm text-slate-500 mb-2">Your Queue Token</p>
-            <p className="text-5xl font-bold text-primary-600 font-mono mb-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Your Queue Token</p>
+            <p className="text-5xl font-bold text-primary-600 dark:text-primary-400 font-mono">
               {confirmed.queueToken}
             </p>
-            <p className="text-xs text-slate-400">Keep this token handy</p>
+            <p className="text-xs text-slate-400 mt-1">Show this at the counter</p>
           </motion.div>
 
-          {/* Details */}
+          {/* ── QR Code ──────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-col items-center gap-3 mb-5"
+          >
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <QrCode size={14} />
+              Scan QR at the counter for instant check-in
+            </div>
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+              <QRCode
+                id="booking-qr-svg"
+                value={JSON.stringify({
+                  ref:    confirmed.bookingReference,
+                  token:  confirmed.queueToken,
+                  dept:   confirmed.department?.name,
+                  time:   confirmed.timeSlot?.start,
+                })}
+                size={160}
+                level="M"
+              />
+            </div>
+            <button
+              onClick={() => downloadQR(confirmed.bookingReference)}
+              className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 font-medium transition-colors"
+            >
+              <Download size={12} />
+              Download QR Code
+            </button>
+          </motion.div>
+
+          {/* ── Booking details ───────────────────────────────────── */}
           <motion.div
             initial="hidden"
             animate="show"
@@ -183,19 +244,16 @@ const BookAppointment = () => {
               hidden: {},
               show: { transition: { staggerChildren: 0.05, delayChildren: 0.45 } },
             }}
-            className="text-left space-y-3 mb-8"
+            className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 space-y-2.5 mb-6"
           >
             {[
-              { label: "Booking Ref", value: confirmed.bookingReference },
-              { label: "Department", value: confirmed.department?.name },
-              { label: "Service", value: confirmed.service?.name },
+              { label: "Booking Ref",  value: confirmed.bookingReference },
+              { label: "Department",   value: confirmed.department?.name },
+              { label: "Service",      value: confirmed.service?.name },
               {
                 label: "Date",
                 value: new Date(confirmed.date).toLocaleDateString("en-IN", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
+                  weekday: "long", year: "numeric", month: "long", day: "numeric",
                 }),
               },
               {
@@ -212,12 +270,13 @@ const BookAppointment = () => {
                 variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
                 className="flex justify-between text-sm"
               >
-                <span className="text-slate-500">{label}</span>
-                <span className="font-medium text-slate-800">{value}</span>
+                <span className="text-slate-500 dark:text-slate-400">{label}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200 text-right max-w-[60%]">{value}</span>
               </motion.div>
             ))}
           </motion.div>
 
+          {/* ── Actions ───────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -226,7 +285,6 @@ const BookAppointment = () => {
           >
             <button
               onClick={() => navigate("/my-appointments")}
-              data-cursor="hover"
               className="btn-secondary flex-1"
             >
               My Bookings
@@ -234,10 +292,9 @@ const BookAppointment = () => {
             <MagneticButton className="flex-1" strength={0.15}>
               <button
                 onClick={() => navigate("/live-queue")}
-                data-cursor="hover"
-                className="btn-primary w-full"
+                className="btn-primary w-full flex items-center justify-center gap-1.5"
               >
-                <Zap size={16} /> Live Queue
+                <Zap size={15} /> Live Queue
               </button>
             </MagneticButton>
           </motion.div>
