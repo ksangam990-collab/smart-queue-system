@@ -59,6 +59,7 @@ export const getAvailableSlots = async (req, res) => {
     const dayName = new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
     });
+
     if (!dept.workingDays.includes(dayName)) {
       return res.status(200).json({
         success: true,
@@ -71,7 +72,7 @@ export const getAvailableSlots = async (req, res) => {
     const allSlots = generateTimeSlots(
       dept.workingHours.start,
       dept.workingHours.end,
-      service.duration,
+      service.duration
     );
 
     // Find already booked slots for this date
@@ -602,6 +603,7 @@ export const rescheduleAppointment = async (req, res) => {
       appointment.department,
       date,
     );
+
     appointment.queueToken  = token;
     appointment.queueNumber = tokenNumber;
     await appointment.save();
@@ -660,7 +662,10 @@ export const rescheduleAppointment = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
-}; = async (req, res) => {
+};
+
+// ─── Cancel appointment (customer) ───────────────────────────
+export const cancelAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findOne({
       _id: req.params.id,
