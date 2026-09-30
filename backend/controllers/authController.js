@@ -1,6 +1,8 @@
 // backend/controllers/authController.js
 
-import User from '../models/User.js';
+import User, { hashToken } from '../models/User.js';
+import bcrypt from 'bcryptjs';
+import { validatePassword } from '../utils/passwordPolicy.js';
 import { generateToken } from '../utils/generateToken.js';
 import {
   sendEmail,
@@ -11,11 +13,27 @@ import {
 } from '../utils/sendEmail.js';
 import { safeMessage } from '../utils/safeError.js';
 
+const MAX_FAILED_LOGINS = 5;
+const LOCK_MINUTES = 15;
+// Pre-computed bcrypt hash (cost 12) used only to equalise login timing
+const DUMMY_HASH = '$2b$12$MKmniC9j4zxaoKTA5G8BBejXPXx.Tpp78G4rHfbjDxE5IO3ncGAyK';
+
 // ─── Register ─────────────────────────────────────────────────
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
-    const normalizedEmail = email?.toLowerCase().trim();
+
+    // Reject non-string input up front (blocks {"$ne": null}-style injection)
+    if ([name, email, password].some((v) => typeof v !== 'string') || (phone !== undefined && typeof phone !== 'string')) {
+      return res.status(400).json({ success: false, message: 'Invalid input.' });
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const pwError = validatePassword(password, { email: normalizedEmail });
+    if (pwError) return res.status(400).json({ success: false, message: pwError });
+    if (phone && !/^[+\d][\d\s()-]{6,19}$/.test(phone.trim())) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid phone number.' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -96,7 +114,7 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
       return res.status(400).json({
         success: false,
         message: 'Please provide email and password.',
@@ -107,19 +125,42 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (!user) {
+      // Burn the same bcrypt time as a real check so response timing does not
+      // reveal whether an email is registered.
+      await bcrypt.compare(password, DUMMY_HASH);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.',
       });
     }
 
+    // Per-account lockout (the IP limiter alone doesn't stop distributed guessing)
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const mins = Math.ceil((user.lockUntil - Date.now()) / 60000);
+      return res.status(429).json({
+        success: false,
+        message: `Too many failed attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}, or reset your password.`,
+      });
+    }
+
     // Compare passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      user.failedLoginAttempts = (user.lockUntil && user.lockUntil <= Date.now() ? 0 : user.failedLoginAttempts || 0) + 1;
+      if (user.failedLoginAttempts >= MAX_FAILED_LOGINS) {
+        user.lockUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
+        user.failedLoginAttempts = 0;
+      }
+      await user.save({ validateBeforeSave: false });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.',
       });
+    }
+
+    if (user.failedLoginAttempts || user.lockUntil) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = undefined;
     }
 
     if (!user.isActive) {
@@ -202,8 +243,11 @@ export const getMe = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    if (typeof email !== 'string') {
+      return res.status(400).json({ success: false, message: 'A valid email is required.' });
+    }
 
-    const user = await User.findOne({ email: email?.toLowerCase().trim() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       // Don't reveal whether email exists
       return res.status(200).json({
@@ -260,8 +304,11 @@ export const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
+    const pwError = validatePassword(password);
+    if (pwError) return res.status(400).json({ success: false, message: pwError });
+
     const user = await User.findOne({
-      resetPasswordToken:  token,
+      resetPasswordToken:  hashToken(token),
       resetPasswordExpire: { $gt: Date.now() },
     });
 
@@ -276,6 +323,8 @@ export const resetPassword = async (req, res) => {
     user.password           = password;
     user.resetPasswordToken  = undefined;
     user.resetPasswordExpire = undefined;
+    user.failedLoginAttempts = 0;
+    user.lockUntil           = undefined;
     await user.save();
 
     const newToken = generateToken(res, user._id, user.role);
@@ -296,7 +345,7 @@ export const verifyEmail = async (req, res) => {
     const { token } = req.params;
 
     const user = await User.findOne({
-      emailVerificationToken:  token,
+      emailVerificationToken:  hashToken(token),
       emailVerificationExpire: { $gt: Date.now() },
     });
 
@@ -325,20 +374,18 @@ export const verifyEmail = async (req, res) => {
 export const resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
-
-    const user = await User.findOne({ email: email?.toLowerCase().trim() });
-    if (!user) {
-      return res.status(200).json({
-        success: true,
-        message: 'If that email exists, a verification link has been sent.',
-      });
+    if (typeof email !== 'string') {
+      return res.status(400).json({ success: false, message: 'A valid email is required.' });
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({
-        success: false,
-        message: 'This account is already verified.',
-      });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const GENERIC = {
+      success: true,
+      message: 'If that email exists and is unverified, a verification link has been sent.',
+    };
+    // Same response for unknown AND already-verified accounts (no enumeration)
+    if (!user || user.isVerified) {
+      return res.status(200).json(GENERIC);
     }
 
     const verificationToken = user.generateVerificationToken();

@@ -257,11 +257,13 @@ const ManageStaff = () => {
                   <input
                     type="password"
                     className="form-input"
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 8 chars, letter + number"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
-                    minLength={6}
+                    minLength={8}
+                    pattern="(?=.*[A-Za-z])(?=.*\d).{8,72}"
+                    title="At least 8 characters, with a letter and a number"
                   />
                 </div>
 
