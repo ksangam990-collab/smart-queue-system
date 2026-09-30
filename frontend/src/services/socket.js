@@ -26,6 +26,9 @@ const SOCKET_URL = getSocketUrl();
 const socket = io(SOCKET_URL, {
   autoConnect: false,      // connect manually when needed
   withCredentials: true,
+  // The server requires a JWT on the handshake. Read it lazily so a reconnect
+  // after login/logout always uses the current token (falls back to the cookie).
+  auth: (cb) => cb({ token: localStorage.getItem('token') || undefined }),
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionAttempts: 5,
