@@ -9,6 +9,7 @@ import {
   getQueueAlertText,
 } from '../utils/sendEmail.js';
 import { emitQueueUpdate } from '../socket.js';
+import { safeMessage } from '../utils/safeError.js';
 
 // Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
 // No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
@@ -54,7 +55,7 @@ export const getQueue = async (req, res) => {
 
     return res.status(200).json({ success: true, data: queue });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -75,7 +76,7 @@ export const getAllQueues = async (req, res) => {
       data: queues,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -235,7 +236,7 @@ export const callNext = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -288,7 +289,7 @@ export const getQueuePosition = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -325,7 +326,7 @@ export const skipToken = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -387,7 +388,7 @@ export const addToQueue = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -412,6 +413,6 @@ export const resetQueue = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

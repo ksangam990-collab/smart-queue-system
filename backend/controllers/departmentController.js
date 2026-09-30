@@ -3,6 +3,7 @@
 import Department from '../models/Department.js';
 import Service    from '../models/Service.js';
 import { safeRegex } from '../utils/escapeRegex.js';
+import { safeMessage } from '../utils/safeError.js';
 
 // ─── Get all departments ───────────────────────────────────────
 export const getDepartments = async (req, res) => {
@@ -23,7 +24,7 @@ export const getDepartments = async (req, res) => {
       data: departments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -42,7 +43,7 @@ export const getDepartment = async (req, res) => {
 
     return res.status(200).json({ success: true, data: department });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -78,7 +79,7 @@ export const createDepartment = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -104,7 +105,7 @@ export const updateDepartment = async (req, res) => {
       data: department,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -129,7 +130,7 @@ export const deleteDepartment = async (req, res) => {
       message: 'Department and its services deleted successfully',
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -154,6 +155,6 @@ export const toggleDepartment = async (req, res) => {
       data: department,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

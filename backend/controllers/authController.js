@@ -9,6 +9,7 @@ import {
   getPasswordResetEmailHTML,
   getPasswordResetEmailText,
 } from '../utils/sendEmail.js';
+import { safeMessage } from '../utils/safeError.js';
 
 // ─── Register ─────────────────────────────────────────────────
 export const register = async (req, res) => {
@@ -86,7 +87,7 @@ export const register = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -164,7 +165,7 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -193,7 +194,7 @@ export const getMe = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -249,7 +250,7 @@ export const forgotPassword = async (req, res) => {
     });
   } catch (error) {
     console.error('Forgot-password error:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -285,7 +286,7 @@ export const resetPassword = async (req, res) => {
       data: { token: newToken },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -316,7 +317,7 @@ export const verifyEmail = async (req, res) => {
       message: 'Email verified successfully!',
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -375,6 +376,6 @@ export const resendVerification = async (req, res) => {
     });
   } catch (error) {
     console.error('Resend-verification error:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

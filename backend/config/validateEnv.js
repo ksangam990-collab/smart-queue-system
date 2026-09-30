@@ -32,6 +32,27 @@ export const validateEnv = () => {
     );
   }
 
+  // A short JWT secret can be brute-forced offline from any captured token.
+  if (process.env.JWT_SECRET.length < 32) {
+    throw new Error(
+      '[validateEnv] JWT_SECRET must be at least 32 characters. ' +
+      "Generate one: node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\""
+    );
+  }
+
+  // CLIENT_URL feeds CORS + Socket.io + email links. A trailing slash or a
+  // missing scheme silently breaks CORS matching, so fail loudly instead.
+  try {
+    const u = new URL(process.env.CLIENT_URL);
+    if (process.env.CLIENT_URL.endsWith('/') || !['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('bad');
+    }
+  } catch {
+    throw new Error(
+      `[validateEnv] CLIENT_URL must be a full origin without a trailing slash (e.g. https://slotly.ksangam.dpdns.org), got: "${process.env.CLIENT_URL}"`
+    );
+  }
+
   // Warn about Cloudinary — missing means avatar uploads silently fail
   const cloudinaryVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
   const missingCloudinary = cloudinaryVars.filter((k) => !process.env[k]);

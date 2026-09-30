@@ -19,6 +19,7 @@ import {
   getAppointmentStatusHTML,
   getAppointmentStatusText,
 } from "../utils/sendEmail.js";
+import { safeMessage } from '../utils/safeError.js';
 
 // Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
 // No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
@@ -103,7 +104,7 @@ export const getAvailableSlots = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -275,7 +276,7 @@ export const bookAppointment = async (req, res) => {
     console.error("Book appointment error:", error.message);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: safeMessage(error),
     });
   }
 };
@@ -304,7 +305,7 @@ export const getMyAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -373,7 +374,7 @@ export const getAllAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -405,7 +406,7 @@ export const getAppointment = async (req, res) => {
 
     return res.status(200).json({ success: true, data: appointment });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -531,7 +532,7 @@ export const updateAppointmentStatus = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -660,7 +661,7 @@ export const rescheduleAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -725,7 +726,7 @@ export const cancelAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -756,7 +757,7 @@ export const getTodayAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -808,6 +809,6 @@ export const getAnalytics = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

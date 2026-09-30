@@ -1,5 +1,6 @@
 import Feedback from '../models/Feedback.js';
 import Appointment from '../models/Appointment.js';
+import { safeMessage } from '../utils/safeError.js';
 
 export const createFeedback = async (req, res) => {
   try {
@@ -41,7 +42,7 @@ export const createFeedback = async (req, res) => {
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -54,7 +55,7 @@ export const getMyFeedback = async (req, res) => {
 
     return res.status(200).json({ success: true, data: feedback });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -92,7 +93,7 @@ export const getAllFeedback = async (req, res) => {
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -117,6 +118,6 @@ export const getCompletedAppointmentsForFeedback = async (req, res) => {
 
     return res.status(200).json({ success: true, data: pending });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

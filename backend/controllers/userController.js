@@ -5,6 +5,7 @@ import Appointment from "../models/Appointment.js";
 import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
 import { safeRegex } from "../utils/escapeRegex.js";
+import { safeMessage } from '../utils/safeError.js';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
@@ -45,7 +46,7 @@ export const getUsers = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -64,7 +65,7 @@ export const getUser = async (req, res) => {
 
     return res.status(200).json({ success: true, data: user });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -109,7 +110,7 @@ export const createStaff = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -136,7 +137,7 @@ export const updateUser = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -167,7 +168,7 @@ export const toggleUserStatus = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -196,7 +197,7 @@ export const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -217,7 +218,7 @@ export const updateProfile = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -244,7 +245,7 @@ export const changePassword = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -379,7 +380,7 @@ export const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -412,7 +413,7 @@ export const uploadAvatar = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -424,7 +425,7 @@ export const getMyAvailability = async (req, res) => {
       .select('availability');
     return res.status(200).json({ success: true, data: user.availability });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -451,7 +452,7 @@ export const updateMyAvailability = async (req, res) => {
       data: user.availability,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -547,6 +548,6 @@ export const getRangedStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

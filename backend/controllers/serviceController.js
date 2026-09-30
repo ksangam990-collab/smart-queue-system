@@ -3,6 +3,7 @@
 import Service    from '../models/Service.js';
 import Department from '../models/Department.js';
 import { safeRegex } from '../utils/escapeRegex.js';
+import { safeMessage } from '../utils/safeError.js';
 
 // ─── Get all services ─────────────────────────────────────────
 export const getServices = async (req, res) => {
@@ -24,7 +25,7 @@ export const getServices = async (req, res) => {
       data: services,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -43,7 +44,7 @@ export const getService = async (req, res) => {
 
     return res.status(200).json({ success: true, data: service });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -82,7 +83,7 @@ export const createService = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -108,7 +109,7 @@ export const updateService = async (req, res) => {
       data: service,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -131,6 +132,6 @@ export const deleteService = async (req, res) => {
       message: 'Service deleted successfully',
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

@@ -1,4 +1,5 @@
 import Notification from '../models/Notification.js';
+import { safeMessage } from '../utils/safeError.js';
 
 export const getMyNotifications = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ export const getMyNotifications = async (req, res) => {
       unreadCount,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -29,7 +30,7 @@ export const markAsRead = async (req, res) => {
     );
     return res.status(200).json({ success: true, message: 'Marked as read' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -41,7 +42,7 @@ export const markAllAsRead = async (req, res) => {
     );
     return res.status(200).json({ success: true, message: 'All marked as read' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -53,6 +54,6 @@ export const deleteNotification = async (req, res) => {
     });
     return res.status(200).json({ success: true, message: 'Deleted' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

@@ -45,8 +45,8 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   }),
 );
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "100kb" })); // uploads go through multer, not JSON
+app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
 // HTTP request logging — verbose 'dev' format locally, structured 'combined'
 // in production (compatible with log aggregators like Datadog / Render logs).
@@ -63,7 +63,6 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "Slotly API is running",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
   });
 });
 
