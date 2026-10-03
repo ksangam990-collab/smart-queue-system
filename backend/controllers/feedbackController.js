@@ -1,9 +1,22 @@
 import Feedback from '../models/Feedback.js';
 import Appointment from '../models/Appointment.js';
+import { safeMessage } from '../utils/safeError.js';
 
 export const createFeedback = async (req, res) => {
   try {
-    const { appointmentId, rating, comment } = req.body;
+    const { appointmentId, rating: rawRating, comment: rawComment } = req.body;
+
+    const rating = Number(rawRating);
+    if (typeof appointmentId !== 'string' || !/^[a-f\d]{24}$/i.test(appointmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid appointment.' });
+    }
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be a whole number from 1 to 5.' });
+    }
+    if (rawComment !== undefined && typeof rawComment !== 'string') {
+      return res.status(400).json({ success: false, message: 'Comment must be text.' });
+    }
+    const comment = rawComment?.trim() || undefined;
 
     const appointment = await Appointment.findOne({
       _id: appointmentId,
@@ -41,7 +54,7 @@ export const createFeedback = async (req, res) => {
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -54,7 +67,7 @@ export const getMyFeedback = async (req, res) => {
 
     return res.status(200).json({ success: true, data: feedback });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -92,7 +105,7 @@ export const getAllFeedback = async (req, res) => {
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -117,6 +130,6 @@ export const getCompletedAppointmentsForFeedback = async (req, res) => {
 
     return res.status(200).json({ success: true, data: pending });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

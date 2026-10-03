@@ -17,6 +17,7 @@ import {
 } from '../controllers/userController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
 import { uploadAvatar } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -29,8 +30,8 @@ router.get('/stats/ranged', authorize('admin'), getRangedStats);
 
 // Own profile
 router.put('/profile',  updateProfile);
-router.put('/password', changePassword);
-router.post('/avatar', upload.single('avatar'), uploadAvatar);
+router.put('/password', writeLimiter, changePassword);
+router.post('/avatar', writeLimiter, upload.single('avatar'), uploadAvatar);
 
 // Staff availability
 router.get('/availability',  getMyAvailability);

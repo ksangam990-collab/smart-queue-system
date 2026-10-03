@@ -129,7 +129,7 @@ const Profile = () => {
           </div>
           <div>
             <label className="form-label">New Password</label>
-            <input type="password" className="form-input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
+            <input type="password" className="form-input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={8} pattern="(?=.*[A-Za-z])(?=.*\d).{8,72}" title="At least 8 characters, with a letter and a number" />
           </div>
           <button type="submit" disabled={changingPassword} className="btn-primary">
             {changingPassword ? 'Updating...' : 'Update Password'}

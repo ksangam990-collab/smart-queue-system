@@ -1,6 +1,7 @@
 // frontend/src/pages/auth/Register.jsx
 
 import { useState } from "react";
+import { validatePasswordRule } from "../../utils/passwordRules";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
@@ -213,7 +214,7 @@ const Register = () => {
                       className={`form-input pl-11 pr-11 ${errors.password ? "border-red-400 focus:ring-red-400" : ""}`}
                       {...register("password", {
                         required: "Password is required",
-                        minLength: { value: 6, message: "Password must be at least 6 characters" },
+                        validate: validatePasswordRule,
                       })}
                     />
                     <button

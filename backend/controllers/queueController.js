@@ -9,6 +9,20 @@ import {
   getQueueAlertText,
 } from '../utils/sendEmail.js';
 import { emitQueueUpdate } from '../socket.js';
+import {
+  isValidId,
+  canAccessDepartment,
+  NO_DEPARTMENT_MESSAGE,
+} from '../utils/queueAccess.js';
+
+const deny = (res, user) =>
+  res.status(403).json({
+    success: false,
+    message: user.role === 'staff' && !user.department
+      ? NO_DEPARTMENT_MESSAGE
+      : 'You can only manage your own department.',
+  });
+import { safeMessage } from '../utils/safeError.js';
 
 // Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
 // No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
@@ -27,8 +41,20 @@ const getISTDateString = () => {
 // ─── Get queue for a department today ────────────────────────
 export const getQueue = async (req, res) => {
   try {
-    const { departmentId, date } = req.query;
+    const { date } = req.query;
+    // Staff default to (and are confined to) their own department
+    const departmentId =
+      req.query.departmentId || (req.user.role === 'staff' ? req.user.department?.toString() : undefined);
+
+    if (!isValidId(departmentId)) {
+      return res.status(400).json({ success: false, message: 'A valid departmentId is required.' });
+    }
+    if (!canAccessDepartment(req.user, departmentId)) return deny(res, req.user);
+
     const queryDate = date ? new Date(date) : new Date(getISTDateString());
+    if (isNaN(queryDate)) {
+      return res.status(400).json({ success: false, message: 'Invalid date.' });
+    }
 
     const queue = await Queue.findOne({
       department: departmentId,
@@ -54,7 +80,7 @@ export const getQueue = async (req, res) => {
 
     return res.status(200).json({ success: true, data: queue });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -75,7 +101,7 @@ export const getAllQueues = async (req, res) => {
       data: queues,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -83,6 +109,13 @@ export const getAllQueues = async (req, res) => {
 export const callNext = async (req, res) => {
   try {
     const { queueId } = req.params;
+
+    if (!isValidId(queueId)) {
+      return res.status(400).json({ success: false, message: 'Invalid queue id.' });
+    }
+    const owner = await Queue.findById(queueId).select('department');
+    if (!owner) return res.status(404).json({ success: false, message: 'Queue not found' });
+    if (!canAccessDepartment(req.user, owner.department)) return deny(res, req.user);
 
     // ── Atomic update — prevents the double-call race condition ──────────────
     // Two staff pressing callNext simultaneously would both read the same queue
@@ -235,7 +268,7 @@ export const callNext = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -243,6 +276,26 @@ export const callNext = async (req, res) => {
 export const getQueuePosition = async (req, res) => {
   try {
     const { token, departmentId } = req.query;
+
+    if (typeof token !== 'string' || !isValidId(departmentId)) {
+      return res.status(400).json({ success: false, message: 'token and a valid departmentId are required.' });
+    }
+
+    // Tokens are sequential (A-001, A-002 …) so without this check any logged-in
+    // user could enumerate other people's queue positions.
+    if (req.user.role === 'customer') {
+      const owns = await Appointment.exists({
+        user: req.user._id,
+        department: departmentId,
+        queueToken: token,
+      });
+      if (!owns) {
+        return res.status(404).json({ success: false, message: 'Token not found in queue' });
+      }
+    } else if (!canAccessDepartment(req.user, departmentId)) {
+      return deny(res, req.user);
+    }
+
     const today = new Date(getISTDateString());
 
     const queue = await Queue.findOne({
@@ -288,7 +341,7 @@ export const getQueuePosition = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -297,10 +350,15 @@ export const skipToken = async (req, res) => {
   try {
     const { queueId, token } = req.body;
 
+    if (!isValidId(queueId) || typeof token !== 'string') {
+      return res.status(400).json({ success: false, message: 'queueId and token are required.' });
+    }
+
     const queue = await Queue.findById(queueId);
     if (!queue) {
       return res.status(404).json({ success: false, message: 'Queue not found' });
     }
+    if (!canAccessDepartment(req.user, queue.department)) return deny(res, req.user);
 
     const item = queue.waitingList.find((i) => i.token === token);
     if (!item) {
@@ -325,7 +383,7 @@ export const skipToken = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -333,6 +391,10 @@ export const skipToken = async (req, res) => {
 export const addToQueue = async (req, res) => {
   try {
     const { appointmentId } = req.body;
+
+    if (!isValidId(appointmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid appointment id.' });
+    }
 
     const appointment = await Appointment.findById(appointmentId)
       .populate('department');
@@ -343,6 +405,8 @@ export const addToQueue = async (req, res) => {
         message: 'Appointment not found',
       });
     }
+
+    if (!canAccessDepartment(req.user, appointment.department._id)) return deny(res, req.user);
 
     const today = new Date(getISTDateString());
     let queue = await Queue.findOne({
@@ -387,7 +451,7 @@ export const addToQueue = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -412,6 +476,6 @@ export const resetQueue = async (req, res) => {
       data: queue,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

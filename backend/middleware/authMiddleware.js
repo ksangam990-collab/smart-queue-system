@@ -42,6 +42,14 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    // Reject tokens issued before the last password change / reset
+    if (user.passwordChangedAt && decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Password was changed recently. Please log in again.',
+      });
+    }
+
     // Attach user to request object
     req.user = user;
     next();

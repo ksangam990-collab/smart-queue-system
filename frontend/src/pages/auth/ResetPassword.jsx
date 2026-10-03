@@ -1,6 +1,7 @@
 // frontend/src/pages/auth/ResetPassword.jsx
 
 import { useState } from "react";
+import { validatePasswordRule } from "../../utils/passwordRules";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -75,10 +76,7 @@ const ResetPassword = () => {
                 className={`form-input pl-11 pr-11 ${errors.password ? "border-red-400" : ""}`}
                 {...register("password", {
                   required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
+                  validate: validatePasswordRule,
                 })}
               />
               <button

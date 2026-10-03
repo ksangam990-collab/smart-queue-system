@@ -10,6 +10,13 @@ import {
   generateTimeSlots,
 } from "../utils/generateQueueToken.js";
 import { safeRegex } from "../utils/escapeRegex.js";
+import { validateSlotRequest } from "../utils/bookingValidation.js";
+import {
+  isValidId,
+  canAccessDepartment,
+  removeAppointmentFromQueues,
+  NO_DEPARTMENT_MESSAGE,
+} from "../utils/queueAccess.js";
 import {
   sendEmail,
   getBookingConfirmationHTML,
@@ -19,6 +26,7 @@ import {
   getAppointmentStatusHTML,
   getAppointmentStatusText,
 } from "../utils/sendEmail.js";
+import { safeMessage } from '../utils/safeError.js';
 
 // Use CLIENT_URL everywhere — FRONTEND_URL was an inconsistent duplicate.
 // No hardcoded fallback: if CLIENT_URL is unset the app is misconfigured and
@@ -103,7 +111,7 @@ export const getAvailableSlots = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -118,15 +126,24 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    const { departmentId, serviceId, date, timeSlot, notes } = req.body;
+    const { departmentId, serviceId, date: rawDate, timeSlot: rawSlot, notes: rawNotes } = req.body;
     const userId = req.user._id;
+
+    // Type-check IDs / notes so objects like { $ne: null } can never reach a query
+    if (!isValidId(departmentId) || !isValidId(serviceId)) {
+      return res.status(400).json({ success: false, message: "Invalid department or service." });
+    }
+    if (rawNotes !== undefined && typeof rawNotes !== "string") {
+      return res.status(400).json({ success: false, message: "Notes must be text." });
+    }
+    const notes = rawNotes?.trim() || undefined;
 
     // Validate service exists and belongs to department
     const service = await Service.findOne({
       _id: serviceId,
       department: departmentId,
       isActive: true,
-    });
+    }).populate("department");
 
     if (!service) {
       return res.status(404).json({
@@ -134,6 +151,15 @@ export const bookAppointment = async (req, res) => {
         message: "Service not found or inactive",
       });
     }
+
+    // Validate date / working day / department status / real slot. From here on
+    // we use the server-normalised `date` and `timeSlot`, never the raw client ones.
+    const check = validateSlotRequest({ service, date: rawDate, timeSlot: rawSlot });
+    if (!check.ok) {
+      return res.status(400).json({ success: false, message: check.message });
+    }
+    const date = rawDate;
+    const timeSlot = check.slot;
 
     // ── Atomic slot reservation ───────────────────────────────────────────────
     // Without a transaction, two concurrent requests for the same slot can both
@@ -163,6 +189,24 @@ export const bookAppointment = async (req, res) => {
           const err = new Error("This time slot is already booked. Please choose another.");
           err.statusCode = 400;
           throw err;
+        }
+
+        // Respect the service's daily capacity
+        if (service.maxSlotsPerDay) {
+          const bookedToday = await Appointment.countDocuments({
+            service: serviceId,
+            date: {
+              $gte: new Date(date).setHours(0, 0, 0, 0),
+              $lte: new Date(date).setHours(23, 59, 59, 999),
+            },
+            status: { $in: ["pending", "confirmed"] },
+          }).session(session);
+
+          if (bookedToday >= service.maxSlotsPerDay) {
+            const err = new Error("This service is fully booked for the selected date.");
+            err.statusCode = 400;
+            throw err;
+          }
         }
 
         // Check user doesn't already have appointment same day same dept
@@ -275,7 +319,7 @@ export const bookAppointment = async (req, res) => {
     console.error("Book appointment error:", error.message);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: safeMessage(error),
     });
   }
 };
@@ -304,7 +348,7 @@ export const getMyAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -323,7 +367,18 @@ export const getAllAppointments = async (req, res) => {
     // ── Build base filter (non-search fields go directly into MongoDB) ──
     const filter = {};
     if (status)     filter.status     = status;
-    if (department) filter.department = new (await import('mongoose')).default.Types.ObjectId(department);
+    if (req.user.role === 'staff') {
+      // Staff only ever see their own department (query param is ignored)
+      if (!req.user.department) {
+        return res.status(403).json({ success: false, message: NO_DEPARTMENT_MESSAGE });
+      }
+      filter.department = req.user.department;
+    } else if (department) {
+      if (!isValidId(department)) {
+        return res.status(400).json({ success: false, message: 'Invalid department.' });
+      }
+      filter.department = new (await import('mongoose')).default.Types.ObjectId(department);
+    }
     if (date) {
       filter.date = {
         $gte: new Date(date).setHours(0, 0, 0, 0),
@@ -373,7 +428,7 @@ export const getAllAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -403,9 +458,16 @@ export const getAppointment = async (req, res) => {
       });
     }
 
+    if (
+      req.user.role === "staff" &&
+      !canAccessDepartment(req.user, appointment.department._id)
+    ) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
     return res.status(200).json({ success: true, data: appointment });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -442,6 +504,16 @@ export const updateAppointmentStatus = async (req, res) => {
       });
     }
 
+    // Staff may only change appointments in their own department
+    if (!canAccessDepartment(req.user, appointment.department)) {
+      return res.status(403).json({
+        success: false,
+        message: req.user.role === "staff" && !req.user.department
+          ? NO_DEPARTMENT_MESSAGE
+          : "You can only manage appointments in your own department.",
+      });
+    }
+
     // Enforce state-machine transitions — prevent reopening terminal states
     const allowedNext = ALLOWED_TRANSITIONS[appointment.status] ?? [];
     if (!allowedNext.includes(status)) {
@@ -460,6 +532,13 @@ export const updateAppointmentStatus = async (req, res) => {
     }
 
     await appointment.save();
+
+    // A cancelled / no-show patient must not stay in the live queue
+    if (status === "cancelled" || status === "no-show") {
+      await removeAppointmentFromQueues(appointment._id).catch((err) =>
+        console.error("[updateAppointmentStatus] queue cleanup failed:", err.message)
+      );
+    }
 
     // Populate user + service + department for email & notification
     await appointment.populate([
@@ -531,16 +610,16 @@ export const updateAppointmentStatus = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Reschedule appointment (customer) ───────────────────────
 export const rescheduleAppointment = async (req, res) => {
   try {
-    const { date, timeSlot } = req.body;
+    const { date, timeSlot: rawSlot } = req.body;
 
-    if (!date || !timeSlot?.start || !timeSlot?.end) {
+    if (!date || !rawSlot?.start || !rawSlot?.end || !isValidId(req.params.id)) {
       return res.status(400).json({
         success: false,
         message: 'New date and time slot are required.',
@@ -564,6 +643,14 @@ export const rescheduleAppointment = async (req, res) => {
       });
     }
 
+    // Validate the requested date/slot exactly like a fresh booking
+    const service = await Service.findById(appointment.service).populate('department');
+    const check = validateSlotRequest({ service, date, timeSlot: rawSlot });
+    if (!check.ok) {
+      return res.status(400).json({ success: false, message: check.message });
+    }
+    const timeSlot = check.slot;
+
     // Check the new slot is not already taken (exclude this appointment)
     const slotTaken = await Appointment.findOne({
       _id:      { $ne: appointment._id },
@@ -583,11 +670,9 @@ export const rescheduleAppointment = async (req, res) => {
       });
     }
 
-    // Remove from old queue waiting list
-    await Queue.updateOne(
-      { department: appointment.department, date: appointment.date },
-      { $pull: { waitingList: { appointment: appointment._id } } }
-    );
+    // Remove from old queue waiting list (by appointment id — the previous
+    // date-equality match never found the queue document)
+    await removeAppointmentFromQueues(appointment._id);
 
     // Update the appointment
     const oldDate     = appointment.date;
@@ -660,7 +745,7 @@ export const rescheduleAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -687,8 +772,14 @@ export const cancelAppointment = async (req, res) => {
     }
 
     appointment.status = "cancelled";
-    appointment.cancelReason = req.body.reason || "Cancelled by user";
+    appointment.cancelReason =
+      typeof req.body.reason === "string" ? req.body.reason.trim().slice(0, 300) || "Cancelled by user" : "Cancelled by user";
     await appointment.save();
+
+    // Free their place in the live queue so they are never called
+    await removeAppointmentFromQueues(appointment._id).catch((err) =>
+      console.error("[cancelAppointment] queue cleanup failed:", err.message)
+    );
 
     // Populate for email
     await appointment.populate([
@@ -725,7 +816,7 @@ export const cancelAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -740,7 +831,10 @@ export const getTodayAppointments = async (req, res) => {
       },
     };
 
-    if (req.user.role === "staff" && req.user.department) {
+    if (req.user.role === "staff") {
+      if (!req.user.department) {
+        return res.status(403).json({ success: false, message: NO_DEPARTMENT_MESSAGE });
+      }
       filter.department = req.user.department;
     }
 
@@ -756,7 +850,7 @@ export const getTodayAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -808,6 +902,6 @@ export const getAnalytics = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

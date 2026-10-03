@@ -3,7 +3,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
+
+// Reset / verification tokens are stored as SHA-256 hashes so a leaked database
+// cannot be used to take over accounts. The raw token only ever exists in the email.
+export const hashToken = (t) => createHash('sha256').update(String(t)).digest('hex');
 
 const userSchema = new mongoose.Schema(
   {
@@ -72,6 +76,11 @@ const userSchema = new mongoose.Schema(
     resetPasswordToken:      String,
     resetPasswordExpire:     Date,
     lastLogin:               Date,
+    // Any JWT issued before this moment is rejected (set on every password change)
+    passwordChangedAt:       Date,
+    // Per-account brute-force protection (complements the IP-based limiter)
+    failedLoginAttempts:     { type: Number, default: 0 },
+    lockUntil:               Date,
   },
   {
     timestamps: true,
@@ -81,6 +90,7 @@ const userSchema = new mongoose.Schema(
 // ─── Hash password before saving ──────────────────────────────
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
+  if (!this.isNew) this.passwordChangedAt = new Date(Date.now() - 1000);
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
 });
@@ -103,7 +113,7 @@ userSchema.methods.generateToken = function () {
 userSchema.methods.generateVerificationToken = function () {
   // 32 random bytes → 64-char hex string. Cryptographically secure unlike Math.random().
   const token = randomBytes(32).toString('hex');
-  this.emailVerificationToken  = token;
+  this.emailVerificationToken  = hashToken(token);
   this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
   return token;
 };
@@ -112,7 +122,7 @@ userSchema.methods.generateVerificationToken = function () {
 userSchema.methods.generateResetToken = function () {
   // 32 random bytes → 64-char hex string. Cryptographically secure unlike Math.random().
   const token = randomBytes(32).toString('hex');
-  this.resetPasswordToken  = token;
+  this.resetPasswordToken  = hashToken(token);
   this.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
   return token;
 };

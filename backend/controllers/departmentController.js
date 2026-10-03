@@ -3,6 +3,35 @@
 import Department from '../models/Department.js';
 import Service    from '../models/Service.js';
 import { safeRegex } from '../utils/escapeRegex.js';
+import { isValidId } from '../utils/queueAccess.js';
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const HM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Whitelist + type-check the fields an admin may set. Previously updateDepartment
+// passed req.body straight to Mongo, letting any field (totalAppointments,
+// isActive, $-operators inside nested objects…) be written.
+const pickDepartmentFields = (body) => {
+  const out = {};
+  for (const k of ['name', 'description', 'icon', 'color']) {
+    if (body[k] !== undefined) {
+      if (typeof body[k] !== 'string') return { error: `Invalid ${k}` };
+      out[k] = body[k];
+    }
+  }
+  if (body.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(body.color)) return { error: 'Color must be a hex value like #6366f1' };
+  if (body.workingDays !== undefined) {
+    if (!Array.isArray(body.workingDays) || !body.workingDays.every((d) => DAYS.includes(d))) return { error: 'Invalid working days' };
+    out.workingDays = [...new Set(body.workingDays)];
+  }
+  if (body.workingHours !== undefined) {
+    const { start, end } = body.workingHours || {};
+    if (!HM.test(start) || !HM.test(end) || start >= end) return { error: 'Working hours must be HH:MM with start before end' };
+    out.workingHours = { start, end };
+  }
+  return { data: out };
+};
+import { safeMessage } from '../utils/safeError.js';
 
 // ─── Get all departments ───────────────────────────────────────
 export const getDepartments = async (req, res) => {
@@ -23,7 +52,7 @@ export const getDepartments = async (req, res) => {
       data: departments,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -42,14 +71,17 @@ export const getDepartment = async (req, res) => {
 
     return res.status(200).json({ success: true, data: department });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Create department ────────────────────────────────────────
 export const createDepartment = async (req, res) => {
   try {
-    const { name, description, icon, color, workingHours, workingDays } = req.body;
+    const picked = pickDepartmentFields(req.body);
+    if (picked.error) return res.status(400).json({ success: false, message: picked.error });
+    const { name, description, icon, color, workingHours, workingDays } = picked.data;
+    if (!name) return res.status(400).json({ success: false, message: 'Department name is required' });
 
     const existing = await Department.findOne({ name });
     if (existing) {
@@ -78,16 +110,20 @@ export const createDepartment = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Update department ────────────────────────────────────────
 export const updateDepartment = async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid department id' });
+    const picked = pickDepartmentFields(req.body);
+    if (picked.error) return res.status(400).json({ success: false, message: picked.error });
+
     const department = await Department.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      picked.data,
       { new: true, runValidators: true }
     );
 
@@ -104,7 +140,7 @@ export const updateDepartment = async (req, res) => {
       data: department,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -129,7 +165,7 @@ export const deleteDepartment = async (req, res) => {
       message: 'Department and its services deleted successfully',
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -154,6 +190,6 @@ export const toggleDepartment = async (req, res) => {
       data: department,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };

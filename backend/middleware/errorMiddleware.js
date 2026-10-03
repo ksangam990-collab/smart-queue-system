@@ -2,20 +2,35 @@
 
 // 404 handler — fires when no route matched
 export const notFound = (req, res, next) => {
-  const error = new Error(`Route not found: ${req.originalUrl}`);
+  const error = new Error('Route not found');
   res.status(404);
   next(error);
 };
 
 // Global error handler — catches everything passed via next(error)
+// (Express 5 also routes rejected async handlers here).
 export const errorHandler = (err, req, res, next) => {
-  // Sometimes Express passes a 200 on an error — fix that
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  // Malformed JSON body / oversized payload from body-parser
+  let statusCode = err.status || err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
+  if (err.type === 'entity.too.large') statusCode = 413;
+  if (err.type === 'entity.parse.failed') statusCode = 400;
+  // Multer upload errors (too large, too many files, unexpected field)
+  if (err.name === 'MulterError') statusCode = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+  if (err.message === 'Only JPG, PNG or WebP images are allowed') statusCode = 400;
+
+  const isProd = process.env.NODE_ENV === 'production';
+  if (statusCode >= 500) console.error('[error]', err);
 
   res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    // Only show stack trace in development
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    message:
+      isProd && statusCode >= 500
+        ? 'Something went wrong. Please try again later.'
+        : err.code === 'LIMIT_FILE_SIZE'
+          ? 'Image is too large (max 2 MB).'
+          : err.type === 'entity.parse.failed'
+          ? 'Invalid JSON in request body.'
+          : err.message || 'Internal Server Error',
+    stack: isProd ? undefined : err.stack,
   });
 };

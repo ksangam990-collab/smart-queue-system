@@ -5,6 +5,11 @@ import Appointment from "../models/Appointment.js";
 import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
 import { safeRegex } from "../utils/escapeRegex.js";
+import { validatePassword } from "../utils/passwordPolicy.js";
+import { isValidId } from "../utils/queueAccess.js";
+import { detectImageType } from "../utils/imageSignature.js";
+import Notification from "../models/Notification.js";
+import { safeMessage } from '../utils/safeError.js';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
 // computed relative to IST, not the server's own clock, or day boundaries
@@ -45,13 +50,14 @@ export const getUsers = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Get single user ──────────────────────────────────────────
 export const getUser = async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid user id" });
     const user = await User.findById(req.params.id)
       .select("-password")
       .populate("department", "name");
@@ -64,14 +70,24 @@ export const getUser = async (req, res) => {
 
     return res.status(200).json({ success: true, data: user });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Create staff user (admin only) ──────────────────────────
 export const createStaff = async (req, res) => {
   try {
-    const { name, email, password, phone, department } = req.body;
+    const { name, email: rawEmail, password, phone, department } = req.body;
+
+    if ([name, rawEmail, password].some((v) => typeof v !== 'string')) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required.' });
+    }
+    const email = rawEmail.toLowerCase().trim();
+    const pwError = validatePassword(password, { email });
+    if (pwError) return res.status(400).json({ success: false, message: pwError });
+    if (department !== undefined && department !== '' && !isValidId(department)) {
+      return res.status(400).json({ success: false, message: 'Invalid department.' });
+    }
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -86,7 +102,7 @@ export const createStaff = async (req, res) => {
       email,
       password,
       phone,
-      department,
+      department: department || undefined,
       role: "staff",
       isVerified: true,
       isActive: true,
@@ -109,18 +125,52 @@ export const createStaff = async (req, res) => {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: messages[0] });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Update user ──────────────────────────────────────────────
 export const updateUser = async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid user id" });
+    }
     const { name, email, phone, role, department, isActive } = req.body;
+
+    // Build the update from ONLY the fields that were actually sent, with types
+    // checked. Previously `undefined` fields were passed through and any shape
+    // of value reached the query.
+    const update = {};
+    if (name !== undefined)  { if (typeof name  !== 'string') return res.status(400).json({ success: false, message: "Invalid name" });  update.name  = name; }
+    if (phone !== undefined) { if (typeof phone !== 'string') return res.status(400).json({ success: false, message: "Invalid phone" }); update.phone = phone; }
+    if (email !== undefined) {
+      if (typeof email !== 'string') return res.status(400).json({ success: false, message: "Invalid email" });
+      update.email = email.toLowerCase().trim();
+      const dup = await User.findOne({ email: update.email, _id: { $ne: req.params.id } }).select('_id');
+      if (dup) return res.status(400).json({ success: false, message: "Email already in use" });
+    }
+    if (role !== undefined) {
+      if (!['admin', 'staff', 'customer'].includes(role)) return res.status(400).json({ success: false, message: "Invalid role" });
+      if (req.params.id === req.user._id.toString() && role !== req.user.role) {
+        return res.status(400).json({ success: false, message: "You cannot change your own role" });
+      }
+      update.role = role;
+    }
+    if (department !== undefined) {
+      if (department !== '' && department !== null && !isValidId(department)) return res.status(400).json({ success: false, message: "Invalid department" });
+      update.department = department || undefined;
+    }
+    if (isActive !== undefined) {
+      if (typeof isActive !== 'boolean') return res.status(400).json({ success: false, message: "Invalid isActive" });
+      if (req.params.id === req.user._id.toString() && !isActive) {
+        return res.status(400).json({ success: false, message: "You cannot deactivate your own account" });
+      }
+      update.isActive = isActive;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { name, email, phone, role, department, isActive },
+      update,
       { new: true, runValidators: true },
     ).select("-password");
 
@@ -136,13 +186,14 @@ export const updateUser = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Toggle user active status ────────────────────────────────
 export const toggleUserStatus = async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid user id" });
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -167,13 +218,14 @@ export const toggleUserStatus = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
 // ─── Delete user ──────────────────────────────────────────────
 export const deleteUser = async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid user id" });
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -189,6 +241,25 @@ export const deleteUser = async (req, res) => {
       });
     }
 
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ success: false, message: "You cannot delete your own account" });
+    }
+
+    // Deleting a customer with appointment history would leave orphaned records
+    // whose `user` no longer resolves (breaking reports, queues and emails).
+    // Deactivating keeps history intact and blocks login just the same.
+    const hasHistory = await Appointment.exists({ user: user._id });
+    if (hasHistory) {
+      return res.status(400).json({
+        success: false,
+        message: "This user has appointment history. Deactivate the account instead of deleting it.",
+      });
+    }
+
+    if (user.avatar?.public_id) {
+      cloudinary.uploader.destroy(user.avatar.public_id).catch(() => {});
+    }
+    await Notification.deleteMany({ recipient: user._id });
     await user.deleteOne();
 
     return res.status(200).json({
@@ -196,7 +267,7 @@ export const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -204,10 +275,13 @@ export const deleteUser = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
+    const update = {};
+    if (name !== undefined)  { if (typeof name  !== 'string') return res.status(400).json({ success: false, message: "Invalid name" });  update.name  = name; }
+    if (phone !== undefined) { if (typeof phone !== 'string') return res.status(400).json({ success: false, message: "Invalid phone" }); update.phone = phone; }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, phone },
+      update,
       { new: true, runValidators: true },
     ).select("-password");
 
@@ -217,7 +291,7 @@ export const updateProfile = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -225,6 +299,15 @@ export const updateProfile = async (req, res) => {
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+
+    if (typeof currentPassword !== 'string') {
+      return res.status(400).json({ success: false, message: 'Current password is required.' });
+    }
+    const pwError = validatePassword(newPassword, { email: req.user.email });
+    if (pwError) return res.status(400).json({ success: false, message: pwError });
+    if (newPassword === currentPassword) {
+      return res.status(400).json({ success: false, message: 'New password must be different from the current one.' });
+    }
 
     const user = await User.findById(req.user._id).select("+password");
 
@@ -244,7 +327,7 @@ export const changePassword = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -379,7 +462,7 @@ export const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -392,13 +475,24 @@ export const uploadAvatar = async (req, res) => {
         .json({ success: false, message: "No file uploaded" });
     }
 
+    // Trust the file's real signature, not the client-declared MIME type
+    const realType = detectImageType(req.file.buffer);
+    if (!realType) {
+      return res.status(400).json({
+        success: false,
+        message: "File is not a valid JPG, PNG or WebP image.",
+      });
+    }
+
     const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+    const dataUri = `data:${realType};base64,${b64}`;
 
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: "smartqueue/avatars",
       transformation: [{ width: 200, height: 200, crop: "fill" }],
     });
+
+    const previousAvatarId = req.user.avatar?.public_id;
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -406,13 +500,20 @@ export const uploadAvatar = async (req, res) => {
       { new: true },
     ).select("-password");
 
+    // Remove the replaced avatar so Cloudinary storage doesn't grow forever
+    if (previousAvatarId) {
+      cloudinary.uploader.destroy(previousAvatarId).catch((err) =>
+        console.error("[uploadAvatar] could not delete old avatar:", err.message)
+      );
+    }
+
     return res.status(200).json({
       success: true,
       message: "Avatar updated successfully",
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -424,7 +525,7 @@ export const getMyAvailability = async (req, res) => {
       .select('availability');
     return res.status(200).json({ success: true, data: user.availability });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -451,7 +552,7 @@ export const updateMyAvailability = async (req, res) => {
       data: user.availability,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
 
@@ -547,6 +648,6 @@ export const getRangedStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
