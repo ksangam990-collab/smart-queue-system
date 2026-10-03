@@ -40,6 +40,12 @@ export const validateEnv = () => {
     );
   }
 
+  // The .env.example placeholder is long enough to pass the length check, but it
+  // is public — anyone could forge tokens if it were ever used for real.
+  if (/replace-with|change-?me|your[-_]?secret|example/i.test(process.env.JWT_SECRET)) {
+    throw new Error('[validateEnv] JWT_SECRET is still a placeholder value. Generate a real random secret.');
+  }
+
   // CLIENT_URL feeds CORS + Socket.io + email links. A trailing slash or a
   // missing scheme silently breaks CORS matching, so fail loudly instead.
   try {
