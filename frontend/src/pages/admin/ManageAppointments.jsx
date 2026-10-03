@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
-import { avatarFallback } from '../../utils/avatar';
+import { avatarFallback, getAvatarUrl } from '../../utils/avatar';
 
 const statusVariant = {
   completed: 'success',
@@ -203,7 +203,7 @@ const ManageAppointments = () => {
                     <td className="table-td">
                       <div className="flex items-center gap-2">
                         <img
-                          src={apt.user?.avatar?.url}
+                          src={getAvatarUrl(apt.user, '5b5ff5', 32)}
                           alt={apt.user?.name}
                           className="w-8 h-8 rounded-full object-cover"
                           onError={(e) => {
