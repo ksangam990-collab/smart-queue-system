@@ -83,3 +83,28 @@ export const resetPasswordLimiter = rateLimit({
     message: 'Too many password reset attempts. Please request a new reset link.',
   },
 });
+
+// Per-USER limiter for state-changing actions that also send emails / create
+// notifications (book, reschedule, cancel). Keyed by user id (falls back to IP)
+// so one account can't spam the clinic or the mail provider, regardless of IP.
+export const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => req.user?._id?.toString() || ipKeyGenerator(req, res),
+  message: {
+    success: false,
+    message: 'Too many booking actions. Please wait a few minutes and try again.',
+  },
+});
+
+// Feedback / profile-style writes: generous but bounded.
+export const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => req.user?._id?.toString() || ipKeyGenerator(req, res),
+  message: { success: false, message: 'Too many requests. Please slow down.' },
+});

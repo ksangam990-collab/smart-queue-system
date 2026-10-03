@@ -7,6 +7,8 @@ import cloudinary from "../config/cloudinary.js";
 import { safeRegex } from "../utils/escapeRegex.js";
 import { validatePassword } from "../utils/passwordPolicy.js";
 import { isValidId } from "../utils/queueAccess.js";
+import { detectImageType } from "../utils/imageSignature.js";
+import Notification from "../models/Notification.js";
 import { safeMessage } from '../utils/safeError.js';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
@@ -239,6 +241,25 @@ export const deleteUser = async (req, res) => {
       });
     }
 
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ success: false, message: "You cannot delete your own account" });
+    }
+
+    // Deleting a customer with appointment history would leave orphaned records
+    // whose `user` no longer resolves (breaking reports, queues and emails).
+    // Deactivating keeps history intact and blocks login just the same.
+    const hasHistory = await Appointment.exists({ user: user._id });
+    if (hasHistory) {
+      return res.status(400).json({
+        success: false,
+        message: "This user has appointment history. Deactivate the account instead of deleting it.",
+      });
+    }
+
+    if (user.avatar?.public_id) {
+      cloudinary.uploader.destroy(user.avatar.public_id).catch(() => {});
+    }
+    await Notification.deleteMany({ recipient: user._id });
     await user.deleteOne();
 
     return res.status(200).json({
@@ -454,19 +475,37 @@ export const uploadAvatar = async (req, res) => {
         .json({ success: false, message: "No file uploaded" });
     }
 
+    // Trust the file's real signature, not the client-declared MIME type
+    const realType = detectImageType(req.file.buffer);
+    if (!realType) {
+      return res.status(400).json({
+        success: false,
+        message: "File is not a valid JPG, PNG or WebP image.",
+      });
+    }
+
     const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+    const dataUri = `data:${realType};base64,${b64}`;
 
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: "smartqueue/avatars",
       transformation: [{ width: 200, height: 200, crop: "fill" }],
     });
 
+    const previousAvatarId = req.user.avatar?.public_id;
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { avatar: { public_id: result.public_id, url: result.secure_url } },
       { new: true },
     ).select("-password");
+
+    // Remove the replaced avatar so Cloudinary storage doesn't grow forever
+    if (previousAvatarId) {
+      cloudinary.uploader.destroy(previousAvatarId).catch((err) =>
+        console.error("[uploadAvatar] could not delete old avatar:", err.message)
+      );
+    }
 
     return res.status(200).json({
       success: true,

@@ -4,7 +4,19 @@ import { safeMessage } from '../utils/safeError.js';
 
 export const createFeedback = async (req, res) => {
   try {
-    const { appointmentId, rating, comment } = req.body;
+    const { appointmentId, rating: rawRating, comment: rawComment } = req.body;
+
+    const rating = Number(rawRating);
+    if (typeof appointmentId !== 'string' || !/^[a-f\d]{24}$/i.test(appointmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid appointment.' });
+    }
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be a whole number from 1 to 5.' });
+    }
+    if (rawComment !== undefined && typeof rawComment !== 'string') {
+      return res.status(400).json({ success: false, message: 'Comment must be text.' });
+    }
+    const comment = rawComment?.trim() || undefined;
 
     const appointment = await Appointment.findOne({
       _id: appointmentId,

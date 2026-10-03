@@ -14,6 +14,7 @@ import {
   getAnalytics,
 } from '../controllers/appointmentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { bookingLimiter } from '../middleware/rateLimiter.js';
 import { detectNoShowsNow } from '../jobs/noShowDetector.js';
 
 const router = express.Router();
@@ -31,10 +32,10 @@ router.get('/slots', getAvailableSlots);
 router.get('/today', authorize('admin', 'staff'), getTodayAppointments);
 
 // Customer routes
-router.post('/',                 authorize('customer'), bookAppointment);
+router.post('/',                 authorize('customer'), bookingLimiter, bookAppointment);
 router.get('/my',                authorize('customer'), getMyAppointments);
-router.patch('/:id/cancel',      authorize('customer'), cancelAppointment);
-router.patch('/:id/reschedule',  authorize('customer'), rescheduleAppointment);
+router.patch('/:id/cancel',      authorize('customer'), bookingLimiter, cancelAppointment);
+router.patch('/:id/reschedule',  authorize('customer'), bookingLimiter, rescheduleAppointment);
 
 // Admin/Staff routes
 router.get('/',             authorize('admin', 'staff'), getAllAppointments);

@@ -14,6 +14,9 @@ export const errorHandler = (err, req, res, next) => {
   let statusCode = err.status || err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
   if (err.type === 'entity.too.large') statusCode = 413;
   if (err.type === 'entity.parse.failed') statusCode = 400;
+  // Multer upload errors (too large, too many files, unexpected field)
+  if (err.name === 'MulterError') statusCode = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+  if (err.message === 'Only JPG, PNG or WebP images are allowed') statusCode = 400;
 
   const isProd = process.env.NODE_ENV === 'production';
   if (statusCode >= 500) console.error('[error]', err);
@@ -23,7 +26,9 @@ export const errorHandler = (err, req, res, next) => {
     message:
       isProd && statusCode >= 500
         ? 'Something went wrong. Please try again later.'
-        : err.type === 'entity.parse.failed'
+        : err.code === 'LIMIT_FILE_SIZE'
+          ? 'Image is too large (max 2 MB).'
+          : err.type === 'entity.parse.failed'
           ? 'Invalid JSON in request body.'
           : err.message || 'Internal Server Error',
     stack: isProd ? undefined : err.stack,
