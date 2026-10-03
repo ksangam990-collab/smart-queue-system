@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
-import { avatarFallback } from '../../utils/avatar';
+import { avatarFallback, getAvatarUrl } from '../../utils/avatar';
 
 const ROLE_FILTERS = ['all', 'customer', 'staff', 'admin'];
 
@@ -146,7 +146,7 @@ const ManageUsers = () => {
                       <td className="table-td">
                         <div className="flex items-center gap-3">
                           <img
-                            src={user.avatar?.url}
+                            src={getAvatarUrl(user, '5b5ff5', 36)}
                             alt={user.name}
                             className="w-9 h-9 rounded-full object-cover"
                             onError={(e) => {

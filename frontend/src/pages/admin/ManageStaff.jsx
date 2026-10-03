@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/common/Badge';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
-import { avatarFallback } from '../../utils/avatar';
+import { avatarFallback, getAvatarUrl } from '../../utils/avatar';
 
 const defaultForm = {
   name: '', email: '', password: '', phone: '', department: '',
@@ -146,7 +146,7 @@ const ManageStaff = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <img
-                    src={member.avatar?.url}
+                    src={getAvatarUrl(member, '5b5ff5', 48)}
                     alt={member.name}
                     className="w-12 h-12 rounded-2xl object-cover"
                     onError={(e) => {

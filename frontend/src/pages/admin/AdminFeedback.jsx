@@ -11,6 +11,7 @@ import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
 import { TablePageSkeleton } from '../../components/common/Skeleton';
 import toast from 'react-hot-toast';
+import { avatarFallback, getAvatarUrl } from '../../utils/avatar';
 
 // ── Star row ──────────────────────────────────────────────────
 const Stars = ({ rating, size = 14 }) => (
@@ -314,9 +315,12 @@ const AdminFeedback = () => {
               >
                 {/* Avatar */}
                 <img
-                  src={f.user?.avatar?.url || `https://api.dicebear.com/7.x/initials/svg?seed=${f.user?.name}`}
+                  src={getAvatarUrl(f.user, '5b5ff5', 40)}
                   alt={f.user?.name}
                   className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src = avatarFallback(f.user?.name, '5b5ff5', 40);
+                  }}
                 />
 
                 {/* Name + service */}

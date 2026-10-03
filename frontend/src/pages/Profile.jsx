@@ -4,7 +4,7 @@ import { User, Lock, Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import { avatarFallback } from '../utils/avatar';
+import { avatarFallback, getAvatarUrl } from '../utils/avatar';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -80,11 +80,11 @@ const Profile = () => {
         {/* Avatar upload */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
           <img
-            src={user?.avatar?.url}
+            src={getAvatarUrl(user, undefined, 64)}
             alt={user?.name}
             className="w-16 h-16 rounded-2xl object-cover"
             onError={(e) => {
-              e.currentTarget.src = avatarFallback(user?.name, '6366f1', 64);
+              e.currentTarget.src = avatarFallback(user?.name, undefined, 64);
             }}
           />
           <label className="btn-secondary cursor-pointer text-sm">

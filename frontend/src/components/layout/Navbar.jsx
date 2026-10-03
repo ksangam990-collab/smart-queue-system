@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../hooks/useTheme";
-import { avatarFallback } from '../../utils/avatar';
+import { avatarFallback, getAvatarUrl } from '../../utils/avatar';
 
 const Navbar = ({ title = "Dashboard", onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -69,11 +69,11 @@ const Navbar = ({ title = "Dashboard", onMenuClick }) => {
             className="flex items-center gap-2 pl-1.5 sm:pl-2 pr-1.5 sm:pr-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all"
           >
             <img
-              src={user?.avatar?.url}
+              src={getAvatarUrl(user, undefined, 48)}
               alt={user?.name}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-200"
               onError={(e) => {
-                e.currentTarget.src = avatarFallback(user?.name, '6366f1', 48);
+                e.currentTarget.src = avatarFallback(user?.name, undefined, 48);
               }}
             />
             <div className="hidden sm:block text-left">
