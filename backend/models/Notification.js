@@ -52,6 +52,8 @@ const notificationSchema = new mongoose.Schema(
 
 // Index for fetching notifications for a user, newest first
 notificationSchema.index({ recipient: 1, createdAt: -1 });
+// Index for unread notifications count
+notificationSchema.index({ recipient: 1, isRead: 1 });
 
 const Notification = mongoose.model('Notification', notificationSchema);
 export default Notification;

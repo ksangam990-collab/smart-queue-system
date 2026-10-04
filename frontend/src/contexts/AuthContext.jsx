@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(data.data));
       } catch {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         setUser(null);
       } finally {
@@ -45,6 +46,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', data.data.token);
+      if (data.data.refreshToken) {
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+      }
       localStorage.setItem('user', JSON.stringify(data.data.user));
       setUser(data.data.user);
       toast.success(`Welcome back, ${data.data.user.name}!`);
@@ -67,6 +71,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/register', formData);
       localStorage.setItem('token', data.data.token);
+      if (data.data.refreshToken) {
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+      }
       localStorage.setItem('user', JSON.stringify(data.data.user));
       setUser(data.data.user);
       toast.success('Account created successfully!');
@@ -82,15 +89,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      // Must call the backend so the HTTP-only cookie is cleared server-side.
-      // Without this the cookie persists and the user remains authenticated
-      // to any request that relies on cookie auth.
-      await api.post('/auth/logout');
+      const refreshToken = localStorage.getItem('refreshToken');
+      // Pass refreshToken in body as fallback if third-party cookies are blocked
+      await api.post('/auth/logout', { refreshToken });
     } catch {
       // Network failure — clear local state anyway so the UI reflects logout.
       // The cookie will expire naturally via its maxAge.
     } finally {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       setUser(null);
       toast.success('Logged out successfully');

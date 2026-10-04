@@ -6,9 +6,10 @@ import Department from "../models/Department.js";
 import cloudinary from "../config/cloudinary.js";
 import { safeRegex } from "../utils/escapeRegex.js";
 import { validatePassword } from "../utils/passwordPolicy.js";
-import { isValidId } from "../utils/queueAccess.js";
+import { isValidId, removeAppointmentFromQueues } from "../utils/queueAccess.js";
 import { detectImageType } from "../utils/imageSignature.js";
 import Notification from "../models/Notification.js";
+import Feedback from "../models/Feedback.js";
 import { safeMessage } from '../utils/safeError.js';
 
 // India follows IST (UTC+5:30) — the server runs in UTC, so "today" must be
@@ -651,3 +652,139 @@ export const getRangedStats = async (req, res) => {
     return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
+
+// ─── Export own personal data (GDPR / Data Portability) ────────
+export const exportMyData = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const [user, appointments, feedback, notifications] = await Promise.all([
+      User.findById(userId).select('-password -failedLoginAttempts -lockUntil -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire'),
+      Appointment.find({ user: userId })
+        .populate('department', 'name')
+        .populate('service', 'name duration fee')
+        .sort({ date: -1 }),
+      Feedback.find({ user: userId })
+        .populate('department', 'name')
+        .populate('service', 'name')
+        .sort({ createdAt: -1 }),
+      Notification.find({ recipient: userId })
+        .sort({ createdAt: -1 })
+        .limit(100),
+    ]);
+
+    const exportPayload = {
+      exportDate: new Date().toISOString(),
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      appointments: appointments.map((a) => ({
+        id: a._id,
+        bookingReference: a.bookingReference,
+        department: a.department?.name,
+        service: a.service?.name,
+        date: a.date,
+        timeSlot: a.timeSlot,
+        status: a.status,
+        queueToken: a.queueToken,
+        fee: a.fee,
+        createdAt: a.createdAt,
+      })),
+      feedback: feedback.map((f) => ({
+        id: f._id,
+        department: f.department?.name,
+        service: f.service?.name,
+        rating: f.rating,
+        comment: f.comment,
+        createdAt: f.createdAt,
+      })),
+      notifications: notifications.map((n) => ({
+        id: n._id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        createdAt: n.createdAt,
+      })),
+    };
+
+    return res.status(200).json({ success: true, data: exportPayload });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: safeMessage(error) });
+  }
+};
+
+// ─── Delete own account (GDPR Right to Erasure / Anonymization) ──
+export const deleteMyAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin accounts cannot be self-deleted. Contact your system owner.',
+      });
+    }
+
+    // 1. Cancel any active or confirmed upcoming appointments and remove from live queues
+    const activeAppointments = await Appointment.find({
+      user: userId,
+      status: { $in: ['pending', 'confirmed'] },
+    });
+
+    for (const apt of activeAppointments) {
+      apt.status = 'cancelled';
+      apt.cancelReason = 'Account deleted by user';
+      await apt.save();
+      await removeAppointmentFromQueues(apt._id).catch(() => {});
+    }
+
+    // 2. Remove Cloudinary avatar if present
+    if (user.avatar?.public_id) {
+      cloudinary.uploader.destroy(user.avatar.public_id).catch(() => {});
+    }
+
+    // 3. Clear user notifications
+    await Notification.deleteMany({ recipient: userId });
+
+    // 4. Anonymize user record to preserve historical queue & financial audits without retaining PII
+    user.name       = 'Deleted User';
+    user.email      = `deleted_${userId}@anonymized.slotly`;
+    user.phone      = undefined;
+    user.avatar     = { public_id: '', url: '' };
+    user.isActive   = false;
+    user.isVerified = false;
+    user.password   = (await import('crypto')).randomBytes(32).toString('hex');
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    // 5. Clear auth cookie
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      expires: new Date(0),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your account has been deleted and personal information anonymized.',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: safeMessage(error) });
+  }
+};
+

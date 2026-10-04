@@ -71,6 +71,8 @@ const queueSchema = new mongoose.Schema(
 queueSchema.index({ department: 1, date: 1 }, { unique: true });
 // Used by removeAppointmentFromQueues() when an appointment is cancelled / rescheduled
 queueSchema.index({ 'waitingList.appointment': 1 });
+queueSchema.index({ 'waitingList.token': 1 });
+queueSchema.index({ 'waitingList.status': 1 });
 
 const Queue = mongoose.model('Queue', queueSchema);
 export default Queue;
