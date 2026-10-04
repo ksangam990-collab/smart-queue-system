@@ -78,8 +78,10 @@ appointmentSchema.pre("save", function (next) {
 });
 
 appointmentSchema.index({ user: 1, date: -1 });
+appointmentSchema.index({ user: 1, status: 1 });
 appointmentSchema.index({ department: 1, date: 1, status: 1 });
 appointmentSchema.index({ date: 1, status: 1 });
+appointmentSchema.index({ assignedStaff: 1, date: 1, status: 1 });
 appointmentSchema.index(
   {
     department: 1,

@@ -3,7 +3,7 @@
 import User, { hashToken } from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import { validatePassword } from '../utils/passwordPolicy.js';
-import { generateToken } from '../utils/generateToken.js';
+import { generateToken, issueTokens } from '../utils/generateToken.js';
 import {
   sendEmail,
   getVerificationEmailHTML,
@@ -81,13 +81,14 @@ export const register = async (req, res) => {
       });
     }
 
-    const token = generateToken(res, user._id, user.role);
+    const { accessToken: token, refreshToken } = await issueTokens(res, user);
 
     return res.status(201).json({
       success: true,
       message: 'Account created successfully!',
       data: {
         token,
+        refreshToken,
         user: {
           _id:        user._id,
           name:       user.name,
@@ -184,15 +185,14 @@ export const login = async (req, res) => {
 
     // Update last login
     user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
-
-    const token = generateToken(res, user._id, user.role);
+    const { accessToken: token, refreshToken } = await issueTokens(res, user);
 
     return res.status(200).json({
       success: true,
       message: 'Login successful!',
       data: {
         token,
+        refreshToken,
         user: {
           _id:        user._id,
           name:       user.name,
@@ -212,12 +212,35 @@ export const login = async (req, res) => {
 
 // ─── Logout ───────────────────────────────────────────────────
 export const logout = async (req, res) => {
+  const isProd = process.env.NODE_ENV === 'production';
+  const rawRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (rawRefreshToken && typeof rawRefreshToken === 'string') {
+    try {
+      const hashed = hashToken(rawRefreshToken);
+      await User.updateOne(
+        { refreshToken: hashed },
+        { $unset: { refreshToken: 1, refreshTokenExpire: 1 } }
+      );
+    } catch (e) {
+      console.error('Logout token clear error:', e);
+    }
+  }
+
   res.cookie('token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     expires: new Date(0),
   });
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    expires: new Date(0),
+    path: '/api/auth',
+  });
+
   return res.status(200).json({
     success: true,
     message: 'Logged out successfully.',
@@ -327,12 +350,12 @@ export const resetPassword = async (req, res) => {
     user.lockUntil           = undefined;
     await user.save();
 
-    const newToken = generateToken(res, user._id, user.role);
+    const { accessToken: newToken, refreshToken } = await issueTokens(res, user);
 
     return res.status(200).json({
       success: true,
       message: 'Password reset successful!',
-      data: { token: newToken },
+      data: { token: newToken, refreshToken },
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: safeMessage(error) });
@@ -426,3 +449,68 @@ export const resendVerification = async (req, res) => {
     return res.status(500).json({ success: false, message: safeMessage(error) });
   }
 };
+
+// ─── Refresh Token ────────────────────────────────────────────
+export const refreshToken = async (req, res) => {
+  try {
+    const rawRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (!rawRefreshToken || typeof rawRefreshToken !== 'string') {
+      return res.status(401).json({
+        success: false,
+        message: 'No refresh token provided.',
+      });
+    }
+
+    const hashed = hashToken(rawRefreshToken);
+    const user = await User.findOne({
+      refreshToken: hashed,
+      refreshTokenExpire: { $gt: Date.now() },
+    }).select('+refreshToken +refreshTokenExpire');
+
+    if (!user) {
+      const isProd = process.env.NODE_ENV === 'production';
+      res.cookie('refreshToken', '', {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        expires: new Date(0),
+        path: '/api/auth',
+      });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired session. Please log in again.',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Your account has been deactivated.',
+      });
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = await issueTokens(res, user);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        token: accessToken,
+        refreshToken: newRefreshToken,
+        user: {
+          _id:        user._id,
+          name:       user.name,
+          email:      user.email,
+          role:       user.role,
+          phone:      user.phone,
+          avatar:     user.avatar,
+          isVerified: user.isVerified,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    return res.status(500).json({ success: false, message: safeMessage(error) });
+  }
+};
+

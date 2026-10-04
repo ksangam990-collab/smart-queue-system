@@ -78,6 +78,8 @@ const userSchema = new mongoose.Schema(
     lastLogin:               Date,
     // Any JWT issued before this moment is rejected (set on every password change)
     passwordChangedAt:       Date,
+    refreshToken:            { type: String, select: false },
+    refreshTokenExpire:      { type: Date, select: false },
     // Per-account brute-force protection (complements the IP-based limiter)
     failedLoginAttempts:     { type: Number, default: 0 },
     lockUntil:               Date,
@@ -131,5 +133,6 @@ userSchema.methods.generateResetToken = function () {
 // Sparse so null/undefined entries (the common case) are excluded from the index.
 userSchema.index({ resetPasswordToken: 1 },       { sparse: true });
 userSchema.index({ emailVerificationToken: 1 },   { sparse: true });
+userSchema.index({ refreshToken: 1 },             { sparse: true });
 
 export default mongoose.model('User', userSchema);

@@ -10,6 +10,8 @@ import {
   deleteUser,
   updateProfile,
   changePassword,
+  exportMyData,
+  deleteMyAccount,
   getDashboardStats,
   getRangedStats,
   getMyAvailability,
@@ -28,10 +30,12 @@ router.use(protect);
 router.get('/stats', authorize('admin'), getDashboardStats);
 router.get('/stats/ranged', authorize('admin'), getRangedStats);
 
-// Own profile
-router.put('/profile',  updateProfile);
-router.put('/password', writeLimiter, changePassword);
-router.post('/avatar', writeLimiter, upload.single('avatar'), uploadAvatar);
+// Own profile & data privacy
+router.put('/profile',     updateProfile);
+router.put('/password',    writeLimiter, changePassword);
+router.post('/avatar',     writeLimiter, upload.single('avatar'), uploadAvatar);
+router.get('/export-data', exportMyData);
+router.delete('/me',       writeLimiter, deleteMyAccount);
 
 // Staff availability
 router.get('/availability',  getMyAvailability);
