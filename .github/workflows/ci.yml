@@ -18,6 +18,8 @@ jobs:
       - run: npm ci
       - name: Syntax check every source file
         run: find . -name node_modules -prune -o -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run automated test suite
+        run: npm test
       - name: Fail on high/critical vulnerabilities (production deps)
         run: npm audit --omit=dev --audit-level=high
 
